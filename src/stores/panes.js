@@ -28,6 +28,8 @@ export const usePanesStore = defineStore('panes', () => {
     const ratio = ref(0.5);
     const pathFocusTick = ref(0);
     const pathFocusPane = ref('left');
+    const filterFocusTick = ref(0);
+    const filterFocusPane = ref('left');
 
     function hydrate(session) {
         const home = useSettingsStore().home;
@@ -125,6 +127,12 @@ export const usePanesStore = defineStore('panes', () => {
         pathFocusTick.value += 1;
     }
 
+    function focusFilter(pane) {
+        activePane.value = pane;
+        filterFocusPane.value = pane;
+        filterFocusTick.value += 1;
+    }
+
     function activatePane(pane) {
         activePane.value = pane;
     }
@@ -155,9 +163,9 @@ export const usePanesStore = defineStore('panes', () => {
     }
 
     return {
-        state, activePane, ratio, pathFocusTick, pathFocusPane,
+        state, activePane, ratio, pathFocusTick, pathFocusPane, filterFocusTick, filterFocusPane,
         hydrate, activeTab, addTab, setTabDir, closeTab, closeActiveTab, activateTab,
-        cycleTab, moveActiveTab, focusPath,
+        cycleTab, moveActiveTab, focusPath, focusFilter,
         activatePane, togglePane, setRatio, snapshot
     };
 });

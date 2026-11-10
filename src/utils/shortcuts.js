@@ -22,7 +22,8 @@ export const SHORTCUT_GROUPS = [
             { keys: 'Alt+→', label: 'help.navForward' },
             { keys: 'Ctrl+L', label: 'help.navPath' },
             { keys: 'Ctrl+R', label: 'help.navRefresh' },
-            { keys: 'Ctrl+H', label: 'help.navHidden' }
+            { keys: 'Ctrl+H', label: 'help.navHidden' },
+            { keys: 'Ctrl+F', label: 'help.navFilter' }
         ]
     },
     {
@@ -47,6 +48,10 @@ export const SHORTCUT_GROUPS = [
             { keys: 'Shift+F4', label: 'help.fileNewFile' },
             { keys: 'F2', label: 'help.fileRename' },
             { keys: 'Alt+Enter', label: 'help.fileProperties' },
+            { keys: 'Ctrl+C', label: 'help.fileClipCopy' },
+            { keys: 'Ctrl+X', label: 'help.fileClipCut' },
+            { keys: 'Ctrl+V', label: 'help.fileClipPaste' },
+            { keys: 'Ctrl+Shift+C', label: 'help.fileClipPath' },
             { keys: 'Delete', label: 'help.fileDelete' }
         ]
     },

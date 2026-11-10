@@ -5,6 +5,7 @@
     >
         <TabBar :pane="pane" />
         <PathBar :pane="pane" />
+        <FilterBar :pane="pane" />
         <FileList :pane="pane" />
         <StatusStrip :pane="pane" />
     </section>
@@ -14,6 +15,7 @@
 import { computed, watch } from 'vue';
 import TabBar from './TabBar.vue';
 import PathBar from './PathBar.vue';
+import FilterBar from './FilterBar.vue';
 import FileList from './FileList.vue';
 import StatusStrip from './StatusStrip.vue';
 import { usePanesStore } from '@/stores/panes';

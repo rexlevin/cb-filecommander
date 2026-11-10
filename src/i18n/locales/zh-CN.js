@@ -69,6 +69,38 @@ export default {
         defaultFile: '新建文件.txt',
         noSelection: '请先选择文件或文件夹'
     },
+    clipboard: {
+        copied: '已复制 {count} 项到剪贴板',
+        cut: '已剪切 {count} 项',
+        pathCopied: '已复制 {count} 项路径',
+        empty: '剪贴板为空'
+    },
+    ctx: {
+        open: '打开',
+        openInNewTab: '在新标签打开',
+        copy: '复制',
+        cut: '剪切',
+        paste: '粘贴',
+        copyTo: '复制到另一栏',
+        moveTo: '移动到另一栏',
+        rename: '重命名',
+        copyPath: '复制路径',
+        showInFolder: '在系统中显示',
+        properties: '属性',
+        newFile: '新建文件',
+        newFolder: '新建文件夹',
+        refresh: '刷新'
+    },
+    filter: {
+        placeholder: '筛选当前目录（子串，不区分大小写）',
+        hint: '输入名称筛选',
+        clear: '清除筛选'
+    },
+    open: {
+        execTitle: '打开可执行文件',
+        execMessage: '确定要运行「{name}」吗？',
+        execConfirm: '运行'
+    },
     confirm: {
         copyTitle: '复制到另一栏',
         copyMessage: '将以下项目复制到另一栏的\n{target}\n{names}\n{summary}',
@@ -196,6 +228,7 @@ export default {
         navPath: '聚焦路径栏',
         navRefresh: '刷新',
         navHidden: '显示 / 隐藏隐藏文件',
+        navFilter: '快速筛选',
         selFocus: '移动焦点',
         selPage: '翻页移动焦点',
         selHomeEnd: '跳到首项 / 末项',
@@ -210,6 +243,10 @@ export default {
         fileNewFile: '新建文件',
         fileRename: '重命名',
         fileProperties: '属性',
+        fileClipCopy: '复制到剪贴板',
+        fileClipCut: '剪切到剪贴板',
+        fileClipPaste: '从剪贴板粘贴',
+        fileClipPath: '复制绝对路径',
         fileDelete: '删除选中项',
         tabNew: '新建标签',
         tabClose: '关闭标签',

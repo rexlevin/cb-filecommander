@@ -18,6 +18,8 @@ export const useUiStore = defineStore('ui', () => {
     const confirm = ref(null);
     // 全局提示：{ id, message, tone }
     const toast = ref(null);
+    // 右键菜单：{ x, y, pane, tabId, entry: Entry|null, paths: string[] }
+    const contextMenu = ref(null);
     let toastTimer = null;
 
     function openSettings(section = 'appearance') {
@@ -107,13 +109,22 @@ export const useUiStore = defineStore('ui', () => {
         if (typeof resolver === 'function') resolver(result);
     }
 
+    function openContextMenu(payload) {
+        contextMenu.value = payload || null;
+    }
+
+    function closeContextMenu() {
+        contextMenu.value = null;
+    }
+
     return {
         settingsOpen, settingsSection, helpOpen,
-        namePrompt, properties, renaming, confirm, toast,
+        namePrompt, properties, renaming, confirm, toast, contextMenu,
         openSettings, closeSettings, openHelp, closeHelp,
         openNamePrompt, closeNamePrompt, openProperties, closeProperties,
         startRename, cancelRename,
         openConfirm, closeConfirm,
+        openContextMenu, closeContextMenu,
         showToast, closeToast
     };
 });

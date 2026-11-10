@@ -19,7 +19,16 @@
             </button>
         </div>
 
-        <div ref="bodyRef" class="list-body" @scroll="onScroll" @click="onBlankClick">
+        <div
+            ref="bodyRef"
+            class="list-body"
+            :class="{ 'drag-over': dragOverPath === '' }"
+            @scroll="onScroll"
+            @click="onBlankClick"
+            @contextmenu.stop.prevent="onBlankContextMenu"
+            @dragover="onBodyDragOver"
+            @drop="onBodyDrop"
+        >
             <div v-if="st.loading && !st.entries.length" class="state-block">
                 <span class="state-spinner" aria-hidden="true"></span>
                 <span class="state-text">{{ t('list.loading') }}</span>
@@ -49,11 +58,20 @@
                     :class="{
                         selected: isSelected(entry),
                         focused: entry.path === st.focusedPath,
-                        unreadable: !entry.readable
+                        unreadable: !entry.readable,
+                        'is-cut': clipboard.isCut(entry.path),
+                        'drag-over': dragOverPath === entry.path
                     }"
                     :style="{ ...gridStyle, height: `${rowHeight}px` }"
+                    :draggable="true"
                     @click.stop="onRowClick(entry, $event)"
                     @dblclick.stop="onRowDblClick(entry)"
+                    @contextmenu.stop.prevent="onRowContextMenu(entry, $event)"
+                    @dragstart="onRowDragStart(entry, $event)"
+                    @dragover="onRowDragOver(entry, $event)"
+                    @dragleave="onRowDragLeave"
+                    @drop="onRowDrop(entry, $event)"
+                    @dragend="onRowDragEnd"
                 >
                     <span class="cell name">
                         <AppIcon
@@ -105,11 +123,14 @@ import { usePanesStore } from '@/stores/panes';
 import { useListingsStore } from '@/stores/listings';
 import { useSettingsStore } from '@/stores/settings';
 import { useUiStore } from '@/stores/ui';
+import { useClipboardStore } from '@/stores/clipboard';
+import { useTransfersStore } from '@/stores/transfers';
 import AppIcon from './AppIcon.vue';
 import { sortEntries, isDirEntry } from '@/utils/sort';
 import { formatSize, formatTime, typeText, errorText as errorTextOf } from '@/utils/format';
 import { fileIcon } from '@/utils/icons';
 import { isRoot } from '@/utils/path';
+import { setInternalDrag, getInternalDrag, clearInternalDrag } from '@/utils/drag';
 
 const api = window.filecommander;
 
@@ -122,13 +143,18 @@ const panes = usePanesStore();
 const listings = useListingsStore();
 const settings = useSettingsStore();
 const ui = useUiStore();
+const clipboard = useClipboardStore();
+const transfers = useTransfersStore();
 
 const bodyRef = ref(null);
 const scrollTop = ref(0);
 const viewport = ref(600);
 const toast = ref('');
+const dragOverPath = ref(null); // '' 表示空白区域，null 表示无
+const typeBuffer = ref('');
 let toastTimer = null;
 let observer = null;
+let typeTimer = null;
 
 const tab = computed(() => panes.activeTab(props.pane));
 const st = computed(() => listings.ensure(tab.value.id));
@@ -144,11 +170,16 @@ const iconSize = computed(() => {
     return Math.max(12, Math.min(32, Math.min(byFont, byRow)));
 });
 
-const sorted = computed(() => sortEntries(st.value.entries, {
-    by: st.value.sort.by,
-    desc: st.value.sort.desc,
-    dirsFirst: settings.dirsFirst
-}));
+const sorted = computed(() => {
+    const list = sortEntries(st.value.entries, {
+        by: st.value.sort.by,
+        desc: st.value.sort.desc,
+        dirsFirst: settings.dirsFirst
+    });
+    const filter = (st.value.filter || '').trim().toLowerCase();
+    if (!filter) return list;
+    return list.filter((entry) => entry.name.toLowerCase().includes(filter));
+});
 
 const startIndex = computed(() => Math.max(0, Math.floor(scrollTop.value / rowHeight.value) - 3));
 const endIndex = computed(() => Math.min(
@@ -269,13 +300,136 @@ function onRowClick(entry, event) {
 async function onRowDblClick(entry) {
     panes.activatePane(props.pane);
     listings.selectOnly(tabId.value, entry.path);
-    const res = await listings.open(props.pane, tabId.value, entry);
-    if (res && !res.ok) showToast(t('errors.OPEN_FAILED'));
+    await listings.open(props.pane, tabId.value, entry);
 }
 
 function onBlankClick() {
     panes.activatePane(props.pane);
     listings.clearSelection(tabId.value);
+}
+
+// ---------------------------------------------------------------------------
+// 右键菜单
+// ---------------------------------------------------------------------------
+function onRowContextMenu(entry, event) {
+    panes.activatePane(props.pane);
+    // 右键未选中项时改为单选
+    if (!st.value.selected.has(entry.path)) {
+        listings.selectOnly(tabId.value, entry.path);
+    }
+    const paths = [...st.value.selected];
+    ui.openContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        pane: props.pane,
+        tabId: tabId.value,
+        entry,
+        paths
+    });
+}
+
+function onBlankContextMenu(event) {
+    panes.activatePane(props.pane);
+    ui.openContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        pane: props.pane,
+        tabId: tabId.value,
+        entry: null,
+        paths: []
+    });
+}
+
+// ---------------------------------------------------------------------------
+// 拖拽
+// ---------------------------------------------------------------------------
+function onRowDragStart(entry, event) {
+    panes.activatePane(props.pane);
+    // 如果拖动的项不在当前选中集合中，改为单选此项
+    if (!st.value.selected.has(entry.path)) {
+        listings.selectOnly(tabId.value, entry.path);
+    }
+    const paths = [...st.value.selected];
+    if (!paths.length) {
+        event.preventDefault();
+        return;
+    }
+    setInternalDrag({ paths, sourcePane: props.pane });
+    // 通知主进程发起原生拖拽（拖出到系统文件管理器）
+    try {
+        api.dragStart(paths);
+    } catch (err) {
+        // 忽略
+    }
+}
+
+function onRowDragEnd() {
+    clearInternalDrag();
+    dragOverPath.value = null;
+}
+
+function onRowDragOver(entry, event) {
+    if (!entry) return;
+    event.preventDefault();
+    dragOverPath.value = entry.path;
+}
+
+function onRowDragLeave() {
+    // 延迟清除，避免在行间移动时闪烁
+    dragOverPath.value = null;
+}
+
+function onBodyDragOver(event) {
+    // 只在没有内部/外部数据时不处理
+    event.preventDefault();
+    dragOverPath.value = '';
+}
+
+function resolveTransfer(event) {
+    const internal = getInternalDrag();
+    if (internal && internal.paths && internal.paths.length) {
+        // 内部拖拽：默认移动（同卷），按住 Ctrl 为复制
+        const ctrl = event.ctrlKey || event.metaKey;
+        const op = ctrl ? 'copy' : 'move';
+        return { op, sources: internal.paths, internal: true };
+    }
+    // 外部拖入：默认复制
+    if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length) {
+        const files = Array.from(event.dataTransfer.files);
+        const paths = files
+            .map((f) => {
+                try { return api.getPathForFile(f); } catch (err) { return null; }
+            })
+            .filter(Boolean);
+        if (paths.length) return { op: 'copy', sources: paths, internal: false };
+    }
+    return null;
+}
+
+function onRowDrop(entry, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const internal = getInternalDrag();
+    // 拖到目录行上时目标为该目录；否则为面板当前目录
+    const targetDir = entry && isDirEntry(entry) ? entry.path : st.value.dir;
+    doDrop(event, targetDir);
+}
+
+function onBodyDrop(event) {
+    event.preventDefault();
+    doDrop(event, st.value.dir);
+}
+
+async function doDrop(event, targetDir) {
+    const plan = resolveTransfer(event);
+    dragOverPath.value = null;
+    clearInternalDrag();
+    if (!plan) return;
+    if (!targetDir) return;
+    const res = await transfers.start(plan.op, plan.sources, targetDir);
+    if (!res || !res.ok) {
+        ui.showToast(errorTextOf(res && res.error, t, te), 'danger');
+    }
 }
 
 function refresh() {
@@ -405,8 +559,47 @@ function onKeydown(event) {
             event.preventDefault();
             toggleCurrent(true);
             break;
-        default:
+        case 'Backspace':
+            // 类型定位缓冲内删除字符
+            if (typeBuffer.value) {
+                event.preventDefault();
+                typeBuffer.value = typeBuffer.value.slice(0, -1);
+                resetTypeTimer();
+            }
             break;
+        default:
+            // 类型定位：可打印字符
+            if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                event.preventDefault();
+                typeBuffer.value += event.key;
+                resetTypeTimer();
+                typeAheadJump();
+            }
+            break;
+    }
+}
+
+function resetTypeTimer() {
+    if (typeTimer) clearTimeout(typeTimer);
+    typeTimer = setTimeout(() => {
+        typeBuffer.value = '';
+        typeTimer = null;
+    }, 500);
+}
+
+function typeAheadJump() {
+    const list = sorted.value;
+    if (!list.length || !typeBuffer.value) return;
+    const prefix = typeBuffer.value.toLowerCase();
+    const currentIndex = list.findIndex((entry) => entry.path === st.value.focusedPath);
+    const start = currentIndex + 1;
+    // 从当前焦点的下一项开始循环查找
+    for (let i = 0; i < list.length; i++) {
+        const idx = (start + i) % list.length;
+        if (list[idx].name.toLowerCase().startsWith(prefix)) {
+            listings.selectOnly(tabId.value, list[idx].path);
+            return;
+        }
     }
 }
 
@@ -421,6 +614,7 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKeydown);
     if (observer) observer.disconnect();
     if (toastTimer) clearTimeout(toastTimer);
+    if (typeTimer) clearTimeout(typeTimer);
 });
 </script>
 
@@ -521,6 +715,21 @@ onBeforeUnmount(() => {
 
 .row.unreadable {
     color: var(--text-secondary);
+}
+
+.row.is-cut {
+    opacity: 0.45;
+}
+
+.row.drag-over {
+    background: var(--selected);
+    outline: 1px dashed var(--accent);
+    outline-offset: -1px;
+}
+
+.list-body.drag-over {
+    outline: 2px dashed var(--accent);
+    outline-offset: -2px;
 }
 
 .cell {

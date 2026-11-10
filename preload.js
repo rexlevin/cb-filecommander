@@ -14,7 +14,7 @@
  *   - onDirStats(cb) / onDirChanged(cb)
  *   - onTransferProgress(cb) / onTransferConflict(cb) / onTransferDone(cb)
  */
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 const path = require('path');
 const pkg = require(path.join(__dirname, 'package.json'));
 
@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('filecommander', {
     placesList: () => ipcRenderer.invoke('filecommander.places.list'),
     freeSpace: (dir) => ipcRenderer.invoke('filecommander.fs.freeSpace', { path: dir }),
     openPath: (dir) => ipcRenderer.invoke('filecommander.openPath', { path: dir }),
+    showInFolder: (dir) => ipcRenderer.invoke('filecommander.showInFolder', { path: dir }),
     watchSet: (dirs) => ipcRenderer.invoke('filecommander.watch.set', { dirs }),
     openExternal: (url) => ipcRenderer.invoke('filecommander.openExternal', { url }),
 
@@ -61,6 +62,12 @@ contextBridge.exposeInMainWorld('filecommander', {
     transferList: () => ipcRenderer.invoke('filecommander.transfer.list'),
 
     getFileIcons: (paths) => ipcRenderer.invoke('filecommander.getFileIcons', paths),
+
+    clipboardWriteText: (text) => ipcRenderer.invoke('filecommander.clipboard.writeText', { text }),
+    clipboardReadText: () => ipcRenderer.invoke('filecommander.clipboard.readText'),
+
+    dragStart: (paths) => ipcRenderer.send('filecommander.drag.start', { paths }),
+    getPathForFile: (file) => webUtils.getPathForFile(file),
 
     onSettingApplied: (cb) => subscribe('filecommander.settingApplied', cb),
     onThemeApplied: (cb) => subscribe('filecommander.themeApplied', cb),

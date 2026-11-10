@@ -69,6 +69,38 @@ export default {
         defaultFile: 'New File.txt',
         noSelection: 'Select a file or folder first'
     },
+    clipboard: {
+        copied: '{count} item(s) copied to clipboard',
+        cut: '{count} item(s) cut',
+        pathCopied: '{count} path(s) copied',
+        empty: 'Clipboard is empty'
+    },
+    ctx: {
+        open: 'Open',
+        openInNewTab: 'Open in New Tab',
+        copy: 'Copy',
+        cut: 'Cut',
+        paste: 'Paste',
+        copyTo: 'Copy to Other Pane',
+        moveTo: 'Move to Other Pane',
+        rename: 'Rename',
+        copyPath: 'Copy Path',
+        showInFolder: 'Show in Folder',
+        properties: 'Properties',
+        newFile: 'New File',
+        newFolder: 'New Folder',
+        refresh: 'Refresh'
+    },
+    filter: {
+        placeholder: 'Filter current folder (substring, case-insensitive)',
+        hint: 'Type to filter',
+        clear: 'Clear filter'
+    },
+    open: {
+        execTitle: 'Open Executable File',
+        execMessage: 'Are you sure you want to run "{name}"?',
+        execConfirm: 'Run'
+    },
     confirm: {
         copyTitle: 'Copy to Other Pane',
         copyMessage: 'Copy the following items to\n{target}\n{names}\n{summary}',
@@ -196,6 +228,7 @@ export default {
         navPath: 'Focus Path Bar',
         navRefresh: 'Refresh',
         navHidden: 'Show / Hide Hidden Files',
+        navFilter: 'Quick Filter',
         selFocus: 'Move Focus',
         selPage: 'Move Focus by Page',
         selHomeEnd: 'Jump to First / Last',
@@ -210,6 +243,10 @@ export default {
         fileNewFile: 'New File',
         fileRename: 'Rename',
         fileProperties: 'Properties',
+        fileClipCopy: 'Copy to Clipboard',
+        fileClipCut: 'Cut to Clipboard',
+        fileClipPaste: 'Paste from Clipboard',
+        fileClipPath: 'Copy Absolute Path',
         fileDelete: 'Delete Selection',
         tabNew: 'New Tab',
         tabClose: 'Close Tab',

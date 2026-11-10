@@ -7,6 +7,7 @@
     <ConflictDialog v-if="transfers.conflict" />
     <ConfirmDialog v-if="ui.confirm" />
     <TransferBar />
+    <ContextMenu />
     <transition name="app-toast">
         <div v-if="ui.toast" class="app-toast" :class="`is-${ui.toast.tone}`" @click="ui.closeToast()">
             {{ ui.toast.message }}
@@ -25,11 +26,13 @@ import PropertiesDialog from '@/components/PropertiesDialog.vue';
 import ConflictDialog from '@/components/ConflictDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import TransferBar from '@/components/TransferBar.vue';
+import ContextMenu from '@/components/ContextMenu.vue';
 import { usePanesStore } from '@/stores/panes';
 import { useListingsStore } from '@/stores/listings';
 import { useSessionStore } from '@/stores/session';
 import { useSettingsStore } from '@/stores/settings';
 import { useTransfersStore } from '@/stores/transfers';
+import { useClipboardStore } from '@/stores/clipboard';
 import { useUiStore } from '@/stores/ui';
 import { sortEntries } from '@/utils/sort';
 import { errorText } from '@/utils/format';
@@ -41,6 +44,7 @@ const listings = useListingsStore();
 const session = useSessionStore();
 const settings = useSettingsStore();
 const transfers = useTransfersStore();
+const clipboard = useClipboardStore();
 const ui = useUiStore();
 
 let offMenuAction = null;
@@ -199,6 +203,81 @@ function openProperties() {
     ui.openProperties(entries.map((entry) => entry.path));
 }
 
+// ---------------------------------------------------------------------------
+// 剪贴板：Ctrl+C / Ctrl+X / Ctrl+V / Ctrl+Shift+C
+// ---------------------------------------------------------------------------
+function copySelection() {
+    const { pane, tab } = activeContext();
+    if (!tab) return;
+    const entries = selectedEntries(pane, tab);
+    if (!entries.length) {
+        ui.showToast(t('ops.noSelection'), 'warning');
+        return;
+    }
+    const paths = entries.map((entry) => entry.path);
+    clipboard.set('copy', paths, pane);
+    clipboard.writePathsText(paths);
+    ui.showToast(t('clipboard.copied', { count: paths.length }), 'info');
+}
+
+function cutSelection() {
+    const { pane, tab } = activeContext();
+    if (!tab) return;
+    const entries = selectedEntries(pane, tab);
+    if (!entries.length) {
+        ui.showToast(t('ops.noSelection'), 'warning');
+        return;
+    }
+    const paths = entries.map((entry) => entry.path);
+    clipboard.set('cut', paths, pane);
+    clipboard.writePathsText(paths);
+    ui.showToast(t('clipboard.cut', { count: paths.length }), 'info');
+}
+
+async function copyPathSelection() {
+    const { pane, tab } = activeContext();
+    if (!tab) return;
+    const entries = selectedEntries(pane, tab);
+    if (!entries.length) {
+        ui.showToast(t('ops.noSelection'), 'warning');
+        return;
+    }
+    const paths = entries.map((entry) => entry.path);
+    await clipboard.writePathsText(paths);
+    ui.showToast(t('clipboard.pathCopied', { count: paths.length }), 'info');
+}
+
+async function pasteSelection() {
+    const { pane, tab } = activeContext();
+    if (!tab || !tab.dir) return;
+    const targetDir = tab.dir;
+
+    // 内部剪贴板优先
+    if (clipboard.mode !== 'none' && clipboard.paths.length) {
+        const op = clipboard.mode;
+        const sources = clipboard.paths;
+        // 剪切粘贴到源自身目录为无操作；粘贴到源子目录直接拒绝
+        const res = await transfers.start(op, sources, targetDir);
+        if (res && res.ok) {
+            if (op === 'cut') clipboard.clear();
+        } else {
+            ui.showToast(errorText(res && res.error, t, te), 'danger');
+        }
+        return;
+    }
+
+    // 内部剪贴板为空时，从系统剪贴板读取文本路径
+    const systemPaths = await clipboard.readPathsFromSystem();
+    if (!systemPaths.length) {
+        ui.showToast(t('clipboard.empty'), 'warning');
+        return;
+    }
+    const res = await transfers.start('copy', systemPaths, targetDir);
+    if (!res || !res.ok) {
+        ui.showToast(errorText(res && res.error, t, te), 'danger');
+    }
+}
+
 function modalOpen() {
     return !!(ui.settingsOpen || ui.helpOpen || ui.namePrompt || ui.properties
         || ui.confirm || transfers.conflict);
@@ -295,6 +374,18 @@ function handleMenuAction(payload) {
         case 'edit.selectAll':
             listings.selectAll(tab.id);
             break;
+        case 'edit.copy':
+            copySelection();
+            break;
+        case 'edit.cut':
+            cutSelection();
+            break;
+        case 'edit.paste':
+            pasteSelection();
+            break;
+        case 'edit.copyPath':
+            copyPathSelection();
+            break;
         case 'go.up':
             listings.up(pane, tab.id);
             break;
@@ -335,6 +426,13 @@ function onKeydown(event) {
         ui.openHelp();
         return;
     }
+    if (event.key === 'Escape') {
+        // Esc：清空剪切状态与选择
+        if (clipboard.mode === 'cut') clipboard.clear();
+        const { pane, tab } = activeContext();
+        if (tab) listings.clearSelection(tab.id);
+        return;
+    }
     const editable = isEditable(event.target);
     const ctrl = event.ctrlKey || event.metaKey;
     const { pane, tab } = activeContext();
@@ -342,6 +440,12 @@ function onKeydown(event) {
 
     if (ctrl && !event.altKey) {
         const key = event.key;
+        // Ctrl+Shift+C 必须先于 Ctrl+C 判断：只复制路径文本，不写入内部文件剪贴板
+        if (key.toLowerCase() === 'c' && event.shiftKey) {
+            event.preventDefault();
+            if (!event.repeat) copyPathSelection();
+            return;
+        }
         // 缩放：Ctrl+=、Ctrl+-、Ctrl+0（macOS/Meta 同理）
         if (key === '=' || key === '+' || key === '-') {
             event.preventDefault();
@@ -391,6 +495,27 @@ function onKeydown(event) {
                     event.preventDefault();
                     panes.focusPath(pane);
                 }
+                return;
+            case 'f':
+                if (!editable) {
+                    event.preventDefault();
+                    if (!event.repeat) panes.focusFilter(pane);
+                }
+                return;
+            case 'c':
+                if (editable) return;
+                event.preventDefault();
+                if (!event.repeat) copySelection();
+                return;
+            case 'x':
+                if (editable) return;
+                event.preventDefault();
+                if (!event.repeat) cutSelection();
+                return;
+            case 'v':
+                if (editable) return;
+                event.preventDefault();
+                if (!event.repeat) pasteSelection();
                 return;
             default:
                 return;
