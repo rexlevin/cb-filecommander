@@ -1,0 +1,84 @@
+:root {
+    --canvas-bg: #f5f6f8;
+    --panel-bg: #ffffff;
+    --panel-head: #fafbfc;
+    --border: #e4e7ec;
+    --text: #1f2329;
+    --text-secondary: #6b7280;
+    --accent: #3b82f6;
+    --selected: rgba(59, 130, 246, 0.10);
+    --hover-bg: rgba(0, 0, 0, 0.06);
+    --danger: #ef4444;
+
+    --ui-font-size: 13px;
+    --ui-font-family: 'Segoe UI', 'Noto Sans', 'DejaVu Sans', 'Microsoft YaHei', sans-serif;
+    --row-height: 26px;
+    --tab-height: 34px;
+    --path-height: 34px;
+    --status-height: 24px;
+}
+
+html.dark {
+    color-scheme: dark;
+    --canvas-bg: #17181c;
+    --panel-bg: #1f2126;
+    --panel-head: #23252b;
+    --border: #2e3138;
+    --text: #e6e8eb;
+    --text-secondary: #9aa0a8;
+    --accent: #5b9dff;
+    --selected: rgba(91, 157, 255, 0.18);
+    --hover-bg: rgba(255, 255, 255, 0.10);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    overflow: hidden;
+    background: var(--canvas-bg);
+    color: var(--text);
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+input,
+textarea {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+button {
+    font-family: inherit;
+}
+
+body.is-resizing {
+    cursor: col-resize;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
