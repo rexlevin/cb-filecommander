@@ -64,7 +64,8 @@ const activeTabId = computed(() => panes.state[props.pane].activeTabId);
     padding: 0 8px;
     border-right: 1px solid var(--border);
     color: var(--text-secondary);
-    font-size: 12px;
+    font-family: var(--tab-font-family);
+    font-size: var(--tab-font-size);
     cursor: default;
 }
 

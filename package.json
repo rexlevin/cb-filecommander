@@ -8,6 +8,7 @@
     "author": "rexlevin",
     "license": "Apache-2.0",
     "homepage": "https://github.com/rexlevin/cb-filecommander",
+    "logo": "public/logo.png",
     "main": "main.js",
     "keywords": ["file-manager", "dual-pane", "utility"],
     "platforms": ["linux", "windows"],

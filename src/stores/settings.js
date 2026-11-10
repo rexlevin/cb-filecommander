@@ -4,6 +4,35 @@ import i18n from '@/i18n';
 
 const api = window.filecommander;
 
+const BASE_FONT_STACK = "'Segoe UI', 'Noto Sans', 'DejaVu Sans', 'Microsoft YaHei', sans-serif";
+
+const DEFAULT_FONTS = {
+    file: { family: '', size: 13 },
+    tab: { family: '', size: 12 },
+    status: { family: '', size: 11 },
+    dialog: { family: '', size: 13 }
+};
+
+const FONT_AREAS = Object.keys(DEFAULT_FONTS);
+
+function normalizeFonts(raw) {
+    const next = {};
+    for (const area of FONT_AREAS) {
+        const source = raw && typeof raw === 'object' && raw[area] ? raw[area] : {};
+        const fallback = DEFAULT_FONTS[area];
+        const size = Number(source.size);
+        next[area] = {
+            family: typeof source.family === 'string' ? source.family : fallback.family,
+            size: Number.isFinite(size) && size > 0 ? size : fallback.size
+        };
+    }
+    return next;
+}
+
+function fontStack(family) {
+    return family ? `${family}, ${BASE_FONT_STACK}` : BASE_FONT_STACK;
+}
+
 /**
  * 设置与主题
  *
@@ -13,7 +42,7 @@ const api = window.filecommander;
 export const useSettingsStore = defineStore('settings', () => {
     const theme = ref('system');
     const locale = ref('system');
-    const fontSize = ref(13);
+    const fonts = ref(normalizeFonts(DEFAULT_FONTS));
     const rowHeight = ref(26);
     const showHidden = ref(false);
     const dirsFirst = ref(true);
@@ -27,6 +56,10 @@ export const useSettingsStore = defineStore('settings', () => {
     const platform = ref('linux');
     const home = ref('/');
     const version = ref('');
+    const electron = ref('');
+    const arch = ref('');
+    const homepage = ref('');
+    const appName = ref('FileCommander');
     const isDark = ref(false);
 
     function applyTheme() {
@@ -35,8 +68,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
     function applyTypography() {
         const root = document.documentElement;
-        root.style.setProperty('--ui-font-size', `${fontSize.value}px`);
         root.style.setProperty('--row-height', `${rowHeight.value}px`);
+        for (const area of FONT_AREAS) {
+            root.style.setProperty(`--${area}-font-family`, fontStack(fonts.value[area].family));
+            root.style.setProperty(`--${area}-font-size`, `${fonts.value[area].size}px`);
+        }
     }
 
     function applyLocale(resolved) {
@@ -48,7 +84,7 @@ export const useSettingsStore = defineStore('settings', () => {
         const s = boot.settings || {};
         theme.value = s.theme || 'system';
         locale.value = s.locale || 'system';
-        fontSize.value = s.fontSize || 13;
+        fonts.value = normalizeFonts(s.fonts);
         rowHeight.value = s.rowHeight || 26;
         showHidden.value = !!s.showHidden;
         dirsFirst.value = s.dirsFirst !== false;
@@ -62,6 +98,10 @@ export const useSettingsStore = defineStore('settings', () => {
         platform.value = boot.platform || 'linux';
         home.value = boot.home || '/';
         version.value = boot.version || '';
+        electron.value = boot.electron || '';
+        arch.value = boot.arch || '';
+        homepage.value = boot.homepage || '';
+        appName.value = boot.appName || 'FileCommander';
         isDark.value = !!boot.dark;
 
         applyTheme();
@@ -74,7 +114,7 @@ export const useSettingsStore = defineStore('settings', () => {
         switch (key) {
             case 'theme': theme.value = value; break;
             case 'locale': locale.value = value; break;
-            case 'fontSize': fontSize.value = value; break;
+            case 'fonts': fonts.value = normalizeFonts(value); break;
             case 'rowHeight': rowHeight.value = value; break;
             case 'showHidden': showHidden.value = !!value; break;
             case 'dirsFirst': dirsFirst.value = !!value; break;
@@ -86,12 +126,18 @@ export const useSettingsStore = defineStore('settings', () => {
             case 'columns': columns.value = { ...columns.value, ...(value || {}) }; break;
             default: return;
         }
-        if (key === 'fontSize' || key === 'rowHeight') applyTypography();
+        if (key === 'fonts' || key === 'rowHeight') applyTypography();
+    }
+
+    // IPC 使用结构化克隆，先转为纯对象，避免 Vue 响应式代理无法序列化
+    function toPlain(value) {
+        return value && typeof value === 'object' ? JSON.parse(JSON.stringify(value)) : value;
     }
 
     function set(key, value) {
-        applyRemote(key, value);
-        api.settingsSet(key, value);
+        const plain = toPlain(value);
+        applyRemote(key, plain);
+        api.settingsSet(key, plain);
     }
 
     function bindEvents() {
@@ -115,9 +161,9 @@ export const useSettingsStore = defineStore('settings', () => {
     }
 
     return {
-        theme, locale, fontSize, rowHeight, showHidden, dirsFirst, showIcons,
+        theme, locale, fonts, rowHeight, showHidden, dirsFirst, showIcons,
         confirmOverwrite, restoreSession, restoreWindow, zoom, columns,
-        platform, home, version, isDark,
+        platform, home, version, electron, arch, homepage, appName, isDark,
         hydrate, set, bindEvents
     };
 });

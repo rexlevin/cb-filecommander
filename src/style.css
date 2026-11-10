@@ -9,9 +9,24 @@
     --selected: rgba(59, 130, 246, 0.10);
     --hover-bg: rgba(0, 0, 0, 0.06);
     --danger: #ef4444;
+    --icon-folder: #3b82f6;
+    --icon-file: #78849a;
+    --kbd-bg: #f6f8fb;
+    --input-bg: #ffffff;
+    --overlay: rgba(15, 20, 28, 0.42);
+    --dialog-shadow: 0 18px 48px rgba(15, 20, 28, 0.22), 0 2px 8px rgba(15, 20, 28, 0.08);
+    --scroll-thumb: #cfd5df;
 
     --ui-font-size: 13px;
     --ui-font-family: 'Segoe UI', 'Noto Sans', 'DejaVu Sans', 'Microsoft YaHei', sans-serif;
+    --file-font-family: var(--ui-font-family);
+    --file-font-size: 13px;
+    --tab-font-family: var(--ui-font-family);
+    --tab-font-size: 12px;
+    --status-font-family: var(--ui-font-family);
+    --status-font-size: 11px;
+    --dialog-font-family: var(--ui-font-family);
+    --dialog-font-size: 13px;
     --row-height: 26px;
     --tab-height: 34px;
     --path-height: 34px;
@@ -29,6 +44,14 @@ html.dark {
     --accent: #5b9dff;
     --selected: rgba(91, 157, 255, 0.18);
     --hover-bg: rgba(255, 255, 255, 0.10);
+    --danger: #f87171;
+    --icon-folder: #6aa6ff;
+    --icon-file: #97a1b0;
+    --kbd-bg: #2a2d34;
+    --input-bg: #26292f;
+    --overlay: rgba(0, 0, 0, 0.56);
+    --dialog-shadow: 0 20px 52px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.40);
+    --scroll-thumb: #3a3e46;
 }
 
 * {
@@ -75,8 +98,17 @@ body.is-resizing {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: var(--scroll-thumb);
     border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
 }
 
 ::-webkit-scrollbar-track {

@@ -19,13 +19,15 @@ function makePane() {
 function clampRatio(value) {
     const ratio = Number(value);
     if (!Number.isFinite(ratio)) return 0.5;
-    return Math.min(0.8, Math.max(0.2, ratio));
+    return Math.min(0.88, Math.max(0.12, ratio));
 }
 
 export const usePanesStore = defineStore('panes', () => {
     const state = reactive({ left: makePane(), right: makePane() });
     const activePane = ref('left');
     const ratio = ref(0.5);
+    const pathFocusTick = ref(0);
+    const pathFocusPane = ref('left');
 
     function hydrate(session) {
         const home = useSettingsStore().home;
@@ -63,12 +65,17 @@ export const usePanesStore = defineStore('panes', () => {
 
     function addTab(pane) {
         const tabs = state[pane].tabs;
-        if (tabs.length >= MAX_TABS) return false;
+        if (tabs.length >= MAX_TABS) return null;
         const dir = activeTab(pane) ? activeTab(pane).dir : useSettingsStore().home;
         const tab = { id: newTabId(), dir };
         tabs.push(tab);
         state[pane].activeTabId = tab.id;
-        return true;
+        return tab;
+    }
+
+    function setTabDir(pane, id, dir) {
+        const tab = state[pane].tabs.find((item) => item.id === id);
+        if (tab && dir) tab.dir = dir;
     }
 
     function closeTab(pane, id) {
@@ -92,6 +99,30 @@ export const usePanesStore = defineStore('panes', () => {
         if (state[pane].tabs.some(tab => tab.id === id)) {
             state[pane].activeTabId = id;
         }
+    }
+
+    function cycleTab(pane, delta) {
+        const tabs = state[pane].tabs;
+        if (tabs.length < 2) return;
+        const index = tabs.findIndex((tab) => tab.id === state[pane].activeTabId);
+        const next = (index + delta + tabs.length) % tabs.length;
+        state[pane].activeTabId = tabs[next].id;
+    }
+
+    function moveActiveTab(pane, delta) {
+        const tabs = state[pane].tabs;
+        const index = tabs.findIndex((tab) => tab.id === state[pane].activeTabId);
+        const target = index + delta;
+        if (index < 0 || target < 0 || target >= tabs.length) return false;
+        const [tab] = tabs.splice(index, 1);
+        tabs.splice(target, 0, tab);
+        return true;
+    }
+
+    function focusPath(pane) {
+        activePane.value = pane;
+        pathFocusPane.value = pane;
+        pathFocusTick.value += 1;
     }
 
     function activatePane(pane) {
@@ -124,8 +155,9 @@ export const usePanesStore = defineStore('panes', () => {
     }
 
     return {
-        state, activePane, ratio,
-        hydrate, activeTab, addTab, closeTab, closeActiveTab, activateTab,
+        state, activePane, ratio, pathFocusTick, pathFocusPane,
+        hydrate, activeTab, addTab, setTabDir, closeTab, closeActiveTab, activateTab,
+        cycleTab, moveActiveTab, focusPath,
         activatePane, togglePane, setRatio, snapshot
     };
 });

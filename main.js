@@ -7,17 +7,25 @@
  * M0 职责：窗口与原生菜单、主题、语言、设置/会话/窗口状态持久化。
  * 文件系统相关 IPC 从 M1 开始接入。
  */
-const { app, BrowserWindow, Menu, ipcMain, nativeTheme, screen, dialog } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, nativeTheme, screen } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const pkg = require('./package.json');
 const { getStore } = require('./lib/settings');
 const { buildMenu } = require('./lib/menu');
+const { registerIpc } = require('./lib/ipc');
+
+const DEFAULT_FONTS = {
+    file: { family: '', size: 13 },     // 文件面板
+    tab: { family: '', size: 12 },      // 标签
+    status: { family: '', size: 11 },   // 状态栏
+    dialog: { family: '', size: 13 }    // 设置与快捷键帮助弹窗
+};
 
 const DEFAULT_SETTINGS = {
     theme: 'system',            // system | light | dark
     locale: 'system',           // system | zh-CN | en-US
-    fontSize: 13,
+    fonts: DEFAULT_FONTS,
     rowHeight: 26,
     showHidden: false,
     dirsFirst: true,
@@ -52,6 +60,7 @@ function readSettings() {
     if (!THEMES.includes(settings.theme)) settings.theme = DEFAULT_SETTINGS.theme;
     if (!LOCALES.includes(settings.locale)) settings.locale = DEFAULT_SETTINGS.locale;
     settings.columns = { ...DEFAULT_SETTINGS.columns, ...(raw.columns || {}) };
+    settings.fonts = sanitizeFonts(raw.fonts, DEFAULT_FONTS);
     return settings;
 }
 
@@ -74,10 +83,10 @@ function validateSetting(key, value) {
             return THEMES.includes(value);
         case 'locale':
             return LOCALES.includes(value);
-        case 'fontSize':
-            return Number.isFinite(value) && value >= 10 && value <= 20;
+        case 'fonts':
+            return value !== null && typeof value === 'object' && !Array.isArray(value);
         case 'rowHeight':
-            return Number.isFinite(value) && value >= 20 && value <= 40;
+            return Number.isFinite(value) && value >= 20 && value <= 45;
         case 'zoom':
             return Number.isFinite(value) && value >= 0.5 && value <= 2;
         case 'columns':
@@ -99,6 +108,27 @@ function sanitizeColumns(columns) {
     for (const key of ['size', 'mtime', 'type']) {
         const width = Number(columns[key]);
         if (Number.isFinite(width) && width >= 40 && width <= 600) next[key] = Math.round(width);
+    }
+    return next;
+}
+
+/**
+ * 规整字体设置：family 为空表示跟随系统默认；size 限制在 8–24。
+ * base 用于补齐缺失区域，不读取持久化文件以避免递归。
+ */
+function sanitizeFonts(fonts, base = DEFAULT_FONTS) {
+    const next = {};
+    for (const area of Object.keys(DEFAULT_FONTS)) {
+        const fallback = base[area] || DEFAULT_FONTS[area];
+        const source = fonts && typeof fonts === 'object' && fonts[area] && typeof fonts[area] === 'object'
+            ? fonts[area]
+            : {};
+        const family = typeof source.family === 'string' ? source.family.trim().slice(0, 120) : fallback.family;
+        const size = Number(source.size);
+        next[area] = {
+            family,
+            size: Number.isFinite(size) ? Math.min(25, Math.max(8, Math.round(size))) : fallback.size
+        };
     }
     return next;
 }
@@ -127,6 +157,7 @@ function changeZoom(direction) {
 function applySetting(key, value) {
     const settings = readSettings();
     if (key === 'columns') settings.columns = sanitizeColumns(value);
+    else if (key === 'fonts') settings.fonts = sanitizeFonts(value);
     else settings[key] = value;
     writeSettings(settings);
 
@@ -295,16 +326,6 @@ function updateWindowBackground() {
 // ---------------------------------------------------------------------------
 // 菜单
 // ---------------------------------------------------------------------------
-function showAbout() {
-    dialog.showMessageBox(mainWindow, {
-        type: 'info',
-        title: pkg.displayName,
-        message: `${pkg.displayName} ${pkg.version}`,
-        detail: `Electron ${process.versions.electron}\n${process.platform} ${process.arch}`,
-        buttons: ['OK']
-    });
-}
-
 function rebuildMenu() {
     const settings = readSettings();
     const menu = buildMenu({
@@ -314,8 +335,7 @@ function rebuildMenu() {
             command: (action) => sendToMain('filecommander.menuAction', { action }),
             setSetting: (key, value) => applySetting(key, value),
             zoom: (direction) => changeZoom(direction),
-            quit: () => app.quit(),
-            about: () => showAbout()
+            quit: () => app.quit()
         }
     });
     Menu.setApplicationMenu(menu);
@@ -332,6 +352,10 @@ ipcMain.on('filecommander.bootstrap', (event) => {
         platform: process.platform,
         home: app.getPath('home'),
         version: pkg.version,
+        electron: process.versions.electron,
+        arch: process.arch,
+        homepage: pkg.homepage,
+        appName: pkg.displayName,
         locale: resolveLocale(settings),
         dark: nativeTheme.shouldUseDarkColors
     };
@@ -371,6 +395,11 @@ ipcMain.handle('filecommander.locale.set', (_e, payload) => {
 // ---------------------------------------------------------------------------
 // 窗口
 // ---------------------------------------------------------------------------
+function windowIcon() {
+    const iconPath = path.join(__dirname, 'public', 'logo.png');
+    return fs.existsSync(iconPath) ? iconPath : undefined;
+}
+
 function createWindow() {
     const settings = readSettings();
     nativeTheme.themeSource = settings.theme;
@@ -385,6 +414,7 @@ function createWindow() {
         minWidth: 900,
         minHeight: 560,
         title: pkg.displayName,
+        icon: windowIcon(),
         backgroundColor: nativeTheme.shouldUseDarkColors ? '#17181c' : '#f5f6f8',
         show: true,
         webPreferences: {
@@ -434,6 +464,7 @@ nativeTheme.on('updated', () => {
 });
 
 app.whenReady().then(() => {
+    registerIpc({ send: sendToMain });
     rebuildMenu();
     createWindow();
 });
