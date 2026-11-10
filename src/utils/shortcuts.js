@@ -39,6 +39,18 @@ export const SHORTCUT_GROUPS = [
         ]
     },
     {
+        title: 'help.groupFile',
+        items: [
+            { keys: 'F5', label: 'help.fileCopy' },
+            { keys: 'F6', label: 'help.fileMove' },
+            { keys: 'F7', label: 'help.fileNewFolder' },
+            { keys: 'Shift+F4', label: 'help.fileNewFile' },
+            { keys: 'F2', label: 'help.fileRename' },
+            { keys: 'Alt+Enter', label: 'help.fileProperties' },
+            { keys: 'Delete', label: 'help.fileDelete' }
+        ]
+    },
+    {
         title: 'help.groupTab',
         items: [
             { keys: 'Ctrl+T', label: 'help.tabNew' },

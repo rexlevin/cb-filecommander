@@ -6,6 +6,7 @@
     --text: #1f2329;
     --text-secondary: #6b7280;
     --accent: #3b82f6;
+    --accent-contrast: #ffffff;
     --selected: rgba(59, 130, 246, 0.10);
     --hover-bg: rgba(0, 0, 0, 0.06);
     --danger: #ef4444;
@@ -42,6 +43,7 @@ html.dark {
     --text: #e6e8eb;
     --text-secondary: #9aa0a8;
     --accent: #5b9dff;
+    --accent-contrast: #0f1115;
     --selected: rgba(91, 157, 255, 0.18);
     --hover-bg: rgba(255, 255, 255, 0.10);
     --danger: #f87171;

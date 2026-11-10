@@ -4,7 +4,7 @@
             <div
                 ref="panelRef"
                 class="modal"
-                :class="{ wide }"
+                :class="{ wide, 'is-compact': compact }"
                 role="dialog"
                 aria-modal="true"
                 tabindex="-1"
@@ -30,7 +30,8 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 defineProps({
     title: { type: String, default: '' },
     closeLabel: { type: String, default: 'Close' },
-    wide: { type: Boolean, default: false }
+    wide: { type: Boolean, default: false },
+    compact: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['close']);
@@ -83,6 +84,12 @@ onBeforeUnmount(() => {
 
 .modal.wide {
     width: 872px;
+}
+
+.modal.is-compact {
+    width: 500px;
+    height: auto;
+    max-height: min(560px, 86vh);
 }
 
 .modal-head {

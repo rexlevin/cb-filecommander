@@ -62,7 +62,19 @@
                             :class="iconClass(entry)"
                             :name="fileIcon(entry)"
                         />
-                        <span class="name-text">{{ entry.name }}</span>
+                        <input
+                            v-if="renamingPath === entry.path"
+                            ref="renameInputRef"
+                            v-model="renameDraft"
+                            class="rename-input"
+                            spellcheck="false"
+                            @click.stop
+                            @dblclick.stop
+                            @keydown.enter.prevent="commitRename(entry)"
+                            @keydown.esc.prevent="cancelRename"
+                            @blur="commitRename(entry)"
+                        />
+                        <span v-else class="name-text">{{ entry.name }}</span>
                         <AppIcon
                             v-if="entry.kind === 'link' && entry.linkTarget === 'broken'"
                             name="warning"
@@ -85,7 +97,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePanesStore } from '@/stores/panes';
 import { useListingsStore } from '@/stores/listings';
@@ -93,9 +105,11 @@ import { useSettingsStore } from '@/stores/settings';
 import { useUiStore } from '@/stores/ui';
 import AppIcon from './AppIcon.vue';
 import { sortEntries, isDirEntry } from '@/utils/sort';
-import { formatSize, formatTime, typeText } from '@/utils/format';
+import { formatSize, formatTime, typeText, errorText as errorTextOf } from '@/utils/format';
 import { fileIcon } from '@/utils/icons';
 import { isRoot } from '@/utils/path';
+
+const api = window.filecommander;
 
 const props = defineProps({
     pane: { type: String, required: true }
@@ -168,6 +182,63 @@ function showToast(message) {
         toast.value = '';
         toastTimer = null;
     }, 2600);
+}
+
+// ---------------------------------------------------------------------------
+// 内联重命名（F2）
+// ---------------------------------------------------------------------------
+const renamingPath = computed(() => (
+    ui.renaming && ui.renaming.tabId === tabId.value ? ui.renaming.path : null
+));
+const renameDraft = ref('');
+const renameInputRef = ref(null);
+let renameCommitting = false;
+
+watch(renamingPath, (path) => {
+    if (!path) return;
+    const entry = st.value.entries.find((item) => item.path === path);
+    renameDraft.value = entry ? entry.name : '';
+    nextTick(() => {
+        const el = Array.isArray(renameInputRef.value) ? renameInputRef.value[0] : renameInputRef.value;
+        if (!el) return;
+        el.focus();
+        const dot = renameDraft.value.lastIndexOf('.');
+        if (entry && entry.kind !== 'dir' && dot > 0) el.setSelectionRange(0, dot);
+        else el.select();
+    });
+});
+
+function cancelRename() {
+    if (renameCommitting) return;
+    ui.cancelRename();
+}
+
+async function commitRename(entry) {
+    if (renameCommitting || !ui.renaming) return;
+    const newName = renameDraft.value.trim();
+    if (!newName || newName === entry.name) {
+        ui.cancelRename();
+        return;
+    }
+
+    renameCommitting = true;
+    const res = await api.rename({ path: entry.path, newName });
+    renameCommitting = false;
+
+    if (!res || !res.ok) {
+        showToast(errorTextOf(res && res.error, t, te));
+        nextTick(() => {
+            const el = Array.isArray(renameInputRef.value) ? renameInputRef.value[0] : renameInputRef.value;
+            if (el) el.focus();
+        });
+        return;
+    }
+
+    ui.cancelRename();
+    await listings.openDir(props.pane, tabId.value, st.value.dir, { mode: 'refresh' });
+    if (st.value.entries.some((item) => item.path === res.path)) {
+        listings.selectOnly(tabId.value, res.path);
+    }
 }
 
 function onScroll(event) {
@@ -269,7 +340,7 @@ function toggleCurrent(moveAfter) {
 }
 
 function onKeydown(event) {
-    if (ui.settingsOpen || ui.helpOpen) return;
+    if (ui.settingsOpen || ui.helpOpen || ui.namePrompt || ui.properties) return;
     if (props.pane !== panes.activePane) return;
     if (event.defaultPrevented || event.isComposing || isEditable(event.target)) return;
 
@@ -477,6 +548,20 @@ onBeforeUnmount(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.rename-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: calc(var(--row-height) - 8px);
+    padding: 0 4px;
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
 }
 
 .state-icon {

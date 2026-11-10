@@ -66,3 +66,9 @@ export function typeText(entry, t) {
     if (group) return t(`list.type${group[0].toUpperCase()}${group.slice(1)}`);
     return t('list.typeExt', { ext: ext.toUpperCase() });
 }
+
+/** 错误码 → i18n 文案；未知错误回退到通用提示 */
+export function errorText(code, t, te) {
+    const key = `errors.${code || 'UNKNOWN'}`;
+    return te(key) ? t(key) : t('errors.UNKNOWN');
+}

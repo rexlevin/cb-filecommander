@@ -8,8 +8,11 @@
  *   - themeSet(theme) / localeSet(locale)
  *   - listDir() / listCancel() / pathExpand() / placesList()
  *   - freeSpace() / openPath() / watchSet() / openExternal()
+ *   - validateName() / mkdir() / createFile() / rename() / properties()
+ *   - transferStart() / transferRespond() / transferCancel() / transferList()
  *   - onSettingApplied(cb) / onThemeApplied(cb) / onMenuAction(cb)
  *   - onDirStats(cb) / onDirChanged(cb)
+ *   - onTransferProgress(cb) / onTransferConflict(cb) / onTransferDone(cb)
  */
 const { contextBridge, ipcRenderer } = require('electron');
 const path = require('path');
@@ -46,9 +49,23 @@ contextBridge.exposeInMainWorld('filecommander', {
     watchSet: (dirs) => ipcRenderer.invoke('filecommander.watch.set', { dirs }),
     openExternal: (url) => ipcRenderer.invoke('filecommander.openExternal', { url }),
 
+    validateName: (payload) => ipcRenderer.invoke('filecommander.path.validateName', payload),
+    mkdir: (payload) => ipcRenderer.invoke('filecommander.mkdir', payload),
+    createFile: (payload) => ipcRenderer.invoke('filecommander.createFile', payload),
+    rename: (payload) => ipcRenderer.invoke('filecommander.rename', payload),
+    properties: (payload) => ipcRenderer.invoke('filecommander.fs.properties', payload),
+
+    transferStart: (payload) => ipcRenderer.invoke('filecommander.transfer.start', payload),
+    transferRespond: (payload) => ipcRenderer.invoke('filecommander.transfer.respond', payload),
+    transferCancel: (taskId) => ipcRenderer.invoke('filecommander.transfer.cancel', { taskId }),
+    transferList: () => ipcRenderer.invoke('filecommander.transfer.list'),
+
     onSettingApplied: (cb) => subscribe('filecommander.settingApplied', cb),
     onThemeApplied: (cb) => subscribe('filecommander.themeApplied', cb),
     onMenuAction: (cb) => subscribe('filecommander.menuAction', cb),
     onDirStats: (cb) => subscribe('filecommander.dirStats', cb),
-    onDirChanged: (cb) => subscribe('filecommander.dirChanged', cb)
+    onDirChanged: (cb) => subscribe('filecommander.dirChanged', cb),
+    onTransferProgress: (cb) => subscribe('filecommander.transfer.progress', cb),
+    onTransferConflict: (cb) => subscribe('filecommander.transfer.conflict', cb),
+    onTransferDone: (cb) => subscribe('filecommander.transfer.done', cb)
 });

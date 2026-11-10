@@ -7,13 +7,14 @@
  * M0 职责：窗口与原生菜单、主题、语言、设置/会话/窗口状态持久化。
  * 文件系统相关 IPC 从 M1 开始接入。
  */
-const { app, BrowserWindow, Menu, ipcMain, nativeTheme, screen } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, nativeTheme, screen, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const pkg = require('./package.json');
 const { getStore } = require('./lib/settings');
 const { buildMenu } = require('./lib/menu');
 const { registerIpc } = require('./lib/ipc');
+const transfer = require('./lib/transfer');
 
 const DEFAULT_FONTS = {
     file: { family: '', size: 13 },     // 文件面板
@@ -431,6 +432,7 @@ function createWindow() {
     const isDev = process.env.NODE_ENV === 'development';
     if (isDev) {
         mainWindow.loadURL('http://localhost:5182');
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
     } else {
         mainWindow.loadFile(path.join(__dirname, 'build', 'index.html'));
     }
@@ -449,7 +451,13 @@ function createWindow() {
     mainWindow.on('unmaximize', saveWindowState);
     mainWindow.on('enter-full-screen', saveWindowState);
     mainWindow.on('leave-full-screen', saveWindowState);
-    mainWindow.on('close', saveWindowStateNow);
+    mainWindow.on('close', (event) => {
+        if (!confirmTransferQuit()) {
+            event.preventDefault();
+            return;
+        }
+        saveWindowStateNow();
+    });
     mainWindow.on('closed', () => { mainWindow = null; });
 }
 
@@ -471,6 +479,39 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
     app.quit();
+});
+
+// 有运行中的复制/移动任务时退出需二次确认（M2）
+let quitConfirmed = false;
+
+function confirmTransferQuit() {
+    if (quitConfirmed || !transfer.hasRunning()) return true;
+    const zh = resolveLocale(readSettings()) === 'zh-CN';
+    const choice = dialog.showMessageBoxSync({
+        type: 'warning',
+        buttons: zh ? ['取消', '退出'] : ['Cancel', 'Quit'],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+        title: zh ? '任务进行中' : 'Transfer in Progress',
+        message: zh
+            ? '文件任务正在进行，确定退出 FileCommander？'
+            : 'A file task is still running. Quit FileCommander anyway?',
+        detail: zh
+            ? '未完成的项目会被中断，已复制完成的内容会保留。'
+            : 'Unfinished items will be interrupted; completed files will be kept.'
+    });
+    if (choice === 0) return false;
+    quitConfirmed = true;
+    return true;
+}
+
+app.on('before-quit', (event) => {
+    if (!confirmTransferQuit()) event.preventDefault();
+});
+
+app.on('will-quit', () => {
+    transfer.cancelAll();
 });
 
 app.on('activate', () => {
