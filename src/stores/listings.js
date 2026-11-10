@@ -7,6 +7,40 @@ import { parentDir } from '@/utils/path';
 
 const api = window.filecommander;
 
+/** 渲染层图标缓存：path → dataUrl，跨标签页/会话共享 */
+const ICON_DATAURL_CACHE = new Map();
+
+/**
+ * 向主进程批量请求系统原生图标，按 kind+ext 去重后写入 entry.icon。
+ * 渲染层先以自绘 SVG 占位（entry.icon = null），拿到后异步替换。
+ */
+async function requestIcons(state) {
+    if (!state || !state.entries.length) return;
+    const toFetch = [];
+    for (const entry of state.entries) {
+        if (entry.icon) continue;                              // 已有（从主进程缓存命中后写回的）
+        if (ICON_DATAURL_CACHE.has(entry.path)) {
+            entry.icon = ICON_DATAURL_CACHE.get(entry.path);   // 渲染层本地缓存命中
+            continue;
+        }
+        toFetch.push({ path: entry.path, kind: entry.kind });
+    }
+    if (!toFetch.length) return;
+
+    try {
+        const map = await api.getFileIcons(toFetch);
+        if (!map) return;
+        for (const entry of state.entries) {
+            if (map[entry.path] !== undefined) {
+                entry.icon = map[entry.path];
+                ICON_DATAURL_CACHE.set(entry.path, map[entry.path]);
+            }
+        }
+    } catch (err) {
+        // 主进程不支持或失败——保持 null，渲染层 fallback 自绘 SVG
+    }
+}
+
 /**
  * 每个标签的运行时列表状态。
  * 只持久化标签目录（panes/session），排序、选择、历史均留在内存。
@@ -117,10 +151,16 @@ export const useListingsStore = defineStore('listings', () => {
         state.token = res.token;
         state.entries = res.entries || [];
         const index = new Map();
-        state.entries.forEach((entry, i) => index.set(entry.name, i));
+        state.entries.forEach((entry, i) => {
+            entry.icon = null;   // 先占位，图标拿到后异步更新
+            index.set(entry.name, i);
+        });
         state.index = markRaw(index);
         state.loaded = true;
         state.lastLoadedAt = Date.now();
+
+        // 异步拉取系统原生文件图标
+        requestIcons(state);
 
         if (mode === 'refresh') {
             const paths = new Set(state.entries.map((entry) => entry.path));

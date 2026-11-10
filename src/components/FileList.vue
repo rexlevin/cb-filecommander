@@ -61,6 +61,8 @@
                             class="icon"
                             :class="iconClass(entry)"
                             :name="fileIcon(entry)"
+                            :size="iconSize"
+                            :dataUrl="entry.icon || null"
                         />
                         <input
                             v-if="renamingPath === entry.path"
@@ -134,6 +136,13 @@ const tabId = computed(() => tab.value.id);
 const sortBy = computed(() => st.value.sort.by);
 const sortDesc = computed(() => st.value.sort.desc);
 const rowHeight = computed(() => settings.rowHeight);
+// 图标大小跟随文件字号线性缩放，并受行高约束避免溢出
+// 字号 13 → 图标 16px，字号 16 → 图标 19px；行高给图标留 4px 边距
+const iconSize = computed(() => {
+    const byFont = settings.fonts.file.size + 3;
+    const byRow = settings.rowHeight - 4;
+    return Math.max(12, Math.min(32, Math.min(byFont, byRow)));
+});
 
 const sorted = computed(() => sortEntries(st.value.entries, {
     by: st.value.sort.by,

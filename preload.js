@@ -60,6 +60,8 @@ contextBridge.exposeInMainWorld('filecommander', {
     transferCancel: (taskId) => ipcRenderer.invoke('filecommander.transfer.cancel', { taskId }),
     transferList: () => ipcRenderer.invoke('filecommander.transfer.list'),
 
+    getFileIcons: (paths) => ipcRenderer.invoke('filecommander.getFileIcons', paths),
+
     onSettingApplied: (cb) => subscribe('filecommander.settingApplied', cb),
     onThemeApplied: (cb) => subscribe('filecommander.themeApplied', cb),
     onMenuAction: (cb) => subscribe('filecommander.menuAction', cb),
