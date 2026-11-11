@@ -585,7 +585,7 @@ function onKeydown(event) {
             if (!event.repeat) startRename();
             return;
         }
-        if (event.key === 'F4') {
+        if (event.key === 'F4' && !event.shiftKey) {
             event.preventDefault();
             if (!event.repeat) openFocusedWithEditor();
             return;
