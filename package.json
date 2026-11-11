@@ -3,7 +3,7 @@
     "displayName": "FileCommander",
     "id": "com.github.rexlevin.cb-filecommander",
     "private": true,
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "FileCommander - 双栏多标签轻量文件管理器",
     "author": "rexlevin",
     "license": "Apache-2.0",
