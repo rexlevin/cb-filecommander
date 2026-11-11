@@ -119,8 +119,10 @@ export const useListingsStore = defineStore('listings', () => {
 
     /**
      * @param {'push'|'history'|'refresh'|'init'} mode
+     * @param {object} [opts]
+     * @param {string} [opts.focusOnEntry] - 加载完成后自动聚焦这个路径的 entry
      */
-    async function openDir(pane, tabId, dir, { mode = 'push' } = {}) {
+    async function openDir(pane, tabId, dir, { mode = 'push', focusOnEntry = null } = {}) {
         if (!dir) return;
         const state = ensure(tabId);
         if (mode === 'refresh' && state.loading) return;
@@ -190,6 +192,15 @@ export const useListingsStore = defineStore('listings', () => {
                 state.historyIndex = 0;
             }
             usePanesStore().setTabDir(pane, tabId, dir);
+
+            // goUp / goBack 等场景：回到上一级后自动聚焦"刚离开的那个 entry"
+            if (focusOnEntry) {
+                const exists = state.entries.some((entry) => entry.path === focusOnEntry);
+                if (exists) {
+                    state.focusedPath = focusOnEntry;
+                    state.anchorPath = focusOnEntry;
+                }
+            }
         }
 
         loadFreeSpace(state, dir);
@@ -215,22 +226,27 @@ export const useListingsStore = defineStore('listings', () => {
     function up(pane, tabId) {
         const state = ensure(tabId);
         if (!state.dir) return;
+        const currentDir = state.dir;    // 要返回的子目录路径
         const parent = parentDir(state.dir);
-        if (parent && parent !== state.dir) openDir(pane, tabId, parent, { mode: 'push' });
+        if (parent && parent !== state.dir) {
+            openDir(pane, tabId, parent, { mode: 'push', focusOnEntry: currentDir });
+        }
     }
 
     function back(pane, tabId) {
         const state = ensure(tabId);
         if (state.historyIndex <= 0) return;
         state.historyIndex -= 1;
-        openDir(pane, tabId, state.history[state.historyIndex], { mode: 'history' });
+        const targetDir = state.history[state.historyIndex];
+        openDir(pane, tabId, targetDir, { mode: 'history', focusOnEntry: targetDir });
     }
 
     function forward(pane, tabId) {
         const state = ensure(tabId);
         if (state.historyIndex >= state.history.length - 1) return;
         state.historyIndex += 1;
-        openDir(pane, tabId, state.history[state.historyIndex], { mode: 'history' });
+        const targetDir = state.history[state.historyIndex];
+        openDir(pane, tabId, targetDir, { mode: 'history', focusOnEntry: targetDir });
     }
 
     function setSort(tabId, by) {
