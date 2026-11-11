@@ -230,6 +230,17 @@ async function openFocusedWithEditor() {
     }
 }
 
+/** 在当前激活 tab 目录打开终端（F9） */
+async function openTerminalInCurrentDir() {
+    const { pane, tab } = activeContext();
+    if (!tab || !tab.dir) return;
+    const terminal = settings.externalTerminal;
+    const res = await api.openTerminal({ dir: tab.dir, terminal });
+    if (!res || !res.ok) {
+        ui.showToast(errorText(res && res.error, t, te), 'danger');
+    }
+}
+
 // ---------------------------------------------------------------------------
 // 剪贴板：Ctrl+C / Ctrl+X / Ctrl+V / Ctrl+Shift+C
 // ---------------------------------------------------------------------------
@@ -592,6 +603,11 @@ function onKeydown(event) {
         if (event.key === 'F7') {
             event.preventDefault();
             if (!event.repeat) openNamePrompt('dir');
+            return;
+        }
+        if (event.key === 'F9') {
+            event.preventDefault();
+            if (!event.repeat) openTerminalInCurrentDir();
             return;
         }
         if (event.key === 'F4' && event.shiftKey) {

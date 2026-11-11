@@ -54,6 +54,7 @@ export const useSettingsStore = defineStore('settings', () => {
     const zoom = ref(1);
     const columns = ref({ size: 96, mtime: 150, type: 100 });
     const externalEditor = ref('');
+    const externalTerminal = ref('');
 
     const platform = ref('linux');
     const home = ref('/');
@@ -106,6 +107,7 @@ export const useSettingsStore = defineStore('settings', () => {
         zoom.value = Number(s.zoom) || 1;
         columns.value = { size: 96, mtime: 150, type: 100, ...(s.columns || {}) };
         externalEditor.value = typeof s.externalEditor === 'string' ? s.externalEditor : '';
+        externalTerminal.value = typeof s.externalTerminal === 'string' ? s.externalTerminal : '';
 
         platform.value = boot.platform || 'linux';
         home.value = boot.home || '/';
@@ -138,6 +140,7 @@ export const useSettingsStore = defineStore('settings', () => {
             case 'zoom': zoom.value = Number(value) || 1; break;
             case 'columns': columns.value = { ...columns.value, ...(value || {}) }; break;
             case 'externalEditor': externalEditor.value = typeof value === 'string' ? value : ''; break;
+            case 'externalTerminal': externalTerminal.value = typeof value === 'string' ? value : ''; break;
             default: return;
         }
         if (key === 'fonts' || key === 'rowHeight' || key === 'rowHeightAuto') applyTypography();
@@ -176,7 +179,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
     return {
         theme, locale, fonts, rowHeight, rowHeightAuto, recommendedRowHeight, showHidden, dirsFirst, showIcons,
-        confirmOverwrite, restoreSession, restoreWindow, zoom, columns, externalEditor,
+        confirmOverwrite, restoreSession, restoreWindow, zoom, columns, externalEditor, externalTerminal,
         platform, home, version, electron, arch, homepage, appName, isDark,
         hydrate, set, bindEvents
     };

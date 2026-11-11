@@ -47,6 +47,7 @@ contextBridge.exposeInMainWorld('filecommander', {
     freeSpace: (dir) => ipcRenderer.invoke('filecommander.fs.freeSpace', { path: dir }),
     openPath: (dir) => ipcRenderer.invoke('filecommander.openPath', { path: dir }),
     openWith: (payload) => ipcRenderer.invoke('filecommander.openWith', payload),
+    openTerminal: (payload) => ipcRenderer.invoke('filecommander.openTerminal', payload),
     showInFolder: (dir) => ipcRenderer.invoke('filecommander.showInFolder', { path: dir }),
     watchSet: (dirs) => ipcRenderer.invoke('filecommander.watch.set', { dirs }),
     openExternal: (url) => ipcRenderer.invoke('filecommander.openExternal', { url }),

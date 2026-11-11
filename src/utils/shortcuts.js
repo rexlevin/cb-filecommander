@@ -46,6 +46,7 @@ export const SHORTCUT_GROUPS = [
             { keys: 'F5', label: 'help.fileCopy' },
             { keys: 'F6', label: 'help.fileMove' },
             { keys: 'F7', label: 'help.fileNewFolder' },
+            { keys: 'F9', label: 'help.fileOpenTerminal' },
             { keys: 'Shift+F4', label: 'help.fileNewFile' },
             { keys: 'F2', label: 'help.fileRename' },
             { keys: 'Alt+Enter', label: 'help.fileProperties' },

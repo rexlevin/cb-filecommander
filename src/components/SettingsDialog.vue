@@ -152,6 +152,19 @@
                     <p class="field-note">{{ t('settings.externalEditorHint') }}</p>
 
                     <div class="field">
+                        <span class="field-label">{{ t('settings.externalTerminal') }}</span>
+                        <input
+                            class="text-input"
+                            type="text"
+                            spellcheck="false"
+                            :placeholder="'gnome-terminal / konsole / cmd.exe'"
+                            :value="settings.externalTerminal"
+                            @change="settings.set('externalTerminal', $event.target.value.trim())"
+                        />
+                    </div>
+                    <p class="field-note">{{ t('settings.externalTerminalHint') }}</p>
+
+                    <div class="field">
                         <span class="field-label">{{ t('settings.showHidden') }}</span>
                         <label class="switch">
                             <input

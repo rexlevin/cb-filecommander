@@ -214,7 +214,9 @@ export default {
         restoreWindow: '启动时恢复窗口位置',
         shortcutsNote: '快捷键为只读列表，与 F1 帮助内容一致。',
         externalEditor: '外部编辑器',
-        externalEditorHint: '可执行文件路径或命令（支持 PATH 中的命令，如 code、vim、gedit）。留空时 F4 回退到系统默认打开方式。'
+        externalEditorHint: '可执行文件路径或命令（支持 PATH 中的命令，如 code、vim、gedit）。留空时 F4 回退到系统默认打开方式。',
+        externalTerminal: '外部终端',
+        externalTerminalHint: '可执行文件路径或命令（支持 PATH 中的命令，如 gnome-terminal、konsole、cmd.exe）。留空时 F9 自动检测系统终端。'
     },
     help: {
         title: '快捷键帮助',
@@ -247,6 +249,7 @@ export default {
         selToggle: '切换当前项选择',
         selToggleNext: '切换选择并下移',
         fileOpenEditor: '用外部编辑器打开',
+        fileOpenTerminal: '打开终端',
         fileCopy: '复制到另一栏',
         fileMove: '移动到另一栏',
         fileNewFolder: '新建文件夹',
@@ -304,6 +307,7 @@ export default {
         UNSUPPORTED: '不支持的文件类型，已跳过',
         UNKNOWN: '未知错误',
         OPEN_FAILED: '无法打开此项',
+        NO_TERMINAL: '未检测到可用的终端程序，请在设置中指定',
         MULTI_SELECTED: '多选时不能打开'
     }
 };

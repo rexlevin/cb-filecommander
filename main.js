@@ -36,7 +36,8 @@ const DEFAULT_SETTINGS = {
     restoreWindow: true,
     zoom: 1,
     columns: { size: 96, mtime: 150, type: 100 },
-    externalEditor: ''          // 外部编辑器路径，留空则使用系统默认打开方式
+    externalEditor: '',          // 外部编辑器路径
+    externalTerminal: ''         // 外部终端路径，留空自动检测系统终端
 };
 
 const THEMES = ['system', 'light', 'dark'];
@@ -94,6 +95,8 @@ function validateSetting(key, value) {
         case 'columns':
             return value !== null && typeof value === 'object' && !Array.isArray(value);
         case 'externalEditor':
+            return typeof value === 'string' && value.length <= 500;
+        case 'externalTerminal':
             return typeof value === 'string' && value.length <= 500;
         case 'rowHeightAuto':
             return typeof value === 'boolean';

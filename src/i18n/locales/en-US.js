@@ -214,7 +214,9 @@ export default {
         restoreWindow: 'Restore Window Position on Startup',
         shortcutsNote: 'This list is read-only and matches the F1 help.',
         externalEditor: 'External Editor',
-        externalEditorHint: 'Path to executable or command (supports PATH entries like code, vim, gedit). Leave empty to fall back to the system default.'
+        externalEditorHint: 'Path to executable or command (supports PATH entries like code, vim, gedit). Leave empty to fall back to the system default.',
+        externalTerminal: 'External Terminal',
+        externalTerminalHint: 'Path to executable or command (supports PATH entries like gnome-terminal, konsole, cmd.exe). Leave empty to auto-detect the system terminal.'
     },
     help: {
         title: 'Keyboard Shortcuts',
@@ -247,6 +249,7 @@ export default {
         selToggle: 'Toggle Current Item',
         selToggleNext: 'Toggle and Move Down',
         fileOpenEditor: 'Open with External Editor',
+        fileOpenTerminal: 'Open Terminal',
         fileCopy: 'Copy to Other Pane',
         fileMove: 'Move to Other Pane',
         fileNewFolder: 'New Folder',
@@ -304,6 +307,7 @@ export default {
         UNSUPPORTED: 'Unsupported file type skipped',
         UNKNOWN: 'Unknown error',
         OPEN_FAILED: 'Unable to open this item',
+        NO_TERMINAL: 'No terminal detected. Please specify one in Settings',
         MULTI_SELECTED: 'Cannot open multiple items'
     }
 };
