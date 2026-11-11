@@ -6,6 +6,52 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.3] - 2026-11-11
+
+### feat | 新功能 / Features
+
+新增 F9 快捷键打开当前激活 tab 所在目录的终端，可在设置中指定外部终端程序（未指定时自动检测系统默认终端）
+
+Add F9 shortcut to open terminal in the active tab's directory, with configurable external terminal setting (auto-detects system default when unspecified)
+
+新增行高自动跟随文件面板字号的设置项，字号变更时行高自适应调整
+
+Add auto-follow row height option for file panel font size — row height adjusts automatically when font size changes
+
+为 openDir 新增加载完成后自动聚焦指定 entry 的功能，goUp/goBack/goForward 导航时自动聚焦刚离开的目录
+
+Add focusOnEntry option to openDir — goUp/goBack/goForward navigation auto-focuses the entry just navigated away from
+
+新增跨平台系统级复制（cp -a / robocopy）和删除（rm -rf / rmdir /s）方法，替代 Node.js 逐文件流式操作，解决跨分区移动失败、权限丢失等问题
+
+Add cross-platform system-level copy (cp -a / robocopy) and delete (rm -rf / rmdir /s) to replace Node.js streaming ops, fixing cross-device move failures and permission loss
+
+### fix | 问题修复 / Bug Fixes
+
+修复同分区复制文件时可执行权限丢失，copyFile 新增 chmod 保留源文件 mode
+
+Fix executable permission loss on same-device copy — copyFile now preserves source mode via chmod
+
+修复目录切换后快速搜索无法聚焦命中项的竞态问题
+
+Fix quick search race condition after directory switch where matches couldn't be focused
+
+修复粘贴无反应（IPC 结构化克隆拒绝 Pinia Proxy）、剪切粘贴报"路径无效"（cut→move 映射缺失）、刷新不恢复剪切变色等问题
+
+Fix paste silently failing (IPC structured clone rejecting Pinia Proxy), cut-paste showing "invalid path" (missing cut→move mapping), and refresh not clearing cut visual markers
+
+### perf | 性能优化 / Performance
+
+优化文件目录变化监听防抖时间从 500ms 降至 200ms，文件变更后面板刷新更快
+
+Reduce directory watch debounce from 500ms to 200ms for faster panel refresh after file changes
+
+### chore | 维护 / Maintenance
+
+更新版本号至 0.1.3
+
+Bump version to 0.1.3
+
 ## [0.1.2] - 2026-11-11
 
 ### feat | 新功能 / Features
