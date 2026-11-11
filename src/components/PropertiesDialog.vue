@@ -89,7 +89,7 @@ async function load() {
     const seq = ++loadSeq;
     loading.value = true;
     errorCode.value = null;
-    const res = await api.properties({ paths: paths.value });
+    const res = await api.properties({ paths: Array.from(paths.value || []).map(String) });
     if (seq !== loadSeq) return;
     loading.value = false;
     if (!res || !res.ok) {

@@ -73,10 +73,12 @@ export default {
         copied: '已复制 {count} 项到剪贴板',
         cut: '已剪切 {count} 项',
         pathCopied: '已复制 {count} 项路径',
-        empty: '剪贴板为空'
+        empty: '剪贴板为空',
+        pasting: '正在粘贴…'
     },
     ctx: {
         open: '打开',
+        openWithEditor: '用外部编辑器打开',
         openInNewTab: '在新标签打开',
         copy: '复制',
         cut: '剪切',
@@ -102,7 +104,8 @@ export default {
     open: {
         execTitle: '打开可执行文件',
         execMessage: '确定要运行「{name}」吗？',
-        execConfirm: '运行'
+        execConfirm: '运行',
+        editorNotDir: '外部编辑器只能打开文件'
     },
     confirm: {
         copyTitle: '复制到另一栏',
@@ -208,7 +211,9 @@ export default {
         resetColumns: '重置列宽',
         restoreSession: '启动时恢复标签页',
         restoreWindow: '启动时恢复窗口位置',
-        shortcutsNote: '快捷键为只读列表，与 F1 帮助内容一致。'
+        shortcutsNote: '快捷键为只读列表，与 F1 帮助内容一致。',
+        externalEditor: '外部编辑器',
+        externalEditorHint: '可执行文件路径或命令（支持 PATH 中的命令，如 code、vim、gedit）。留空时 F4 回退到系统默认打开方式。'
     },
     help: {
         title: '快捷键帮助',
@@ -240,6 +245,7 @@ export default {
         selNone: '取消全选',
         selToggle: '切换当前项选择',
         selToggleNext: '切换选择并下移',
+        fileOpenEditor: '用外部编辑器打开',
         fileCopy: '复制到另一栏',
         fileMove: '移动到另一栏',
         fileNewFolder: '新建文件夹',

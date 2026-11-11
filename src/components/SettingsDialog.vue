@@ -129,6 +129,19 @@
                 <!-- 行为 -->
                 <section v-else-if="ui.settingsSection === 'behavior'" class="pane">
                     <div class="field">
+                        <span class="field-label">{{ t('settings.externalEditor') }}</span>
+                        <input
+                            class="text-input"
+                            type="text"
+                            spellcheck="false"
+                            :placeholder="'code / vim / gedit'"
+                            :value="settings.externalEditor"
+                            @change="onExternalEditorChange($event)"
+                        />
+                    </div>
+                    <p class="field-note">{{ t('settings.externalEditorHint') }}</p>
+
+                    <div class="field">
                         <span class="field-label">{{ t('settings.showHidden') }}</span>
                         <label class="switch">
                             <input
@@ -381,6 +394,11 @@ function stepRowHeight(delta) {
 
 function openHomepage() {
     api.openExternal(settings.homepage);
+}
+
+function onExternalEditorChange(event) {
+    const value = event.target.value.trim();
+    settings.set('externalEditor', value);
 }
 </script>
 

@@ -35,7 +35,8 @@ const DEFAULT_SETTINGS = {
     restoreSession: true,
     restoreWindow: true,
     zoom: 1,
-    columns: { size: 96, mtime: 150, type: 100 }
+    columns: { size: 96, mtime: 150, type: 100 },
+    externalEditor: ''          // 外部编辑器路径，留空则使用系统默认打开方式
 };
 
 const THEMES = ['system', 'light', 'dark'];
@@ -92,6 +93,8 @@ function validateSetting(key, value) {
             return Number.isFinite(value) && value >= 0.5 && value <= 2;
         case 'columns':
             return value !== null && typeof value === 'object' && !Array.isArray(value);
+        case 'externalEditor':
+            return typeof value === 'string' && value.length <= 500;
         case 'showHidden':
         case 'dirsFirst':
         case 'showIcons':

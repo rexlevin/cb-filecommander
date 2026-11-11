@@ -64,11 +64,12 @@ export const useTransfersStore = defineStore('transfers', () => {
     async function start(op, sources, targetDir) {
         const settings = useSettingsStore();
         const payload = {
-            op,
-            sources
+            op: String(op),
+            // IPC 结构化克隆不接受 Pinia/Vue 的响应式 Proxy，必须先转成纯数组
+            sources: Array.from(sources || []).map(String)
         };
         if (op === 'copy' || op === 'move') {
-            payload.targetDir = targetDir;
+            payload.targetDir = String(targetDir || '');
             payload.policy = settings.confirmOverwrite ? 'ask' : 'overwrite';
         }
         const res = await api.transferStart(payload);

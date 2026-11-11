@@ -73,10 +73,12 @@ export default {
         copied: '{count} item(s) copied to clipboard',
         cut: '{count} item(s) cut',
         pathCopied: '{count} path(s) copied',
-        empty: 'Clipboard is empty'
+        empty: 'Clipboard is empty',
+        pasting: 'Pasting…'
     },
     ctx: {
         open: 'Open',
+        openWithEditor: 'Open with External Editor',
         openInNewTab: 'Open in New Tab',
         copy: 'Copy',
         cut: 'Cut',
@@ -102,7 +104,8 @@ export default {
     open: {
         execTitle: 'Open Executable File',
         execMessage: 'Are you sure you want to run "{name}"?',
-        execConfirm: 'Run'
+        execConfirm: 'Run',
+        editorNotDir: 'External editor can only open files'
     },
     confirm: {
         copyTitle: 'Copy to Other Pane',
@@ -208,7 +211,9 @@ export default {
         resetColumns: 'Reset Column Widths',
         restoreSession: 'Restore Tabs on Startup',
         restoreWindow: 'Restore Window Position on Startup',
-        shortcutsNote: 'This list is read-only and matches the F1 help.'
+        shortcutsNote: 'This list is read-only and matches the F1 help.',
+        externalEditor: 'External Editor',
+        externalEditorHint: 'Path to executable or command (supports PATH entries like code, vim, gedit). Leave empty to fall back to the system default.'
     },
     help: {
         title: 'Keyboard Shortcuts',
@@ -240,6 +245,7 @@ export default {
         selNone: 'Clear Selection',
         selToggle: 'Toggle Current Item',
         selToggleNext: 'Toggle and Move Down',
+        fileOpenEditor: 'Open with External Editor',
         fileCopy: 'Copy to Other Pane',
         fileMove: 'Move to Other Pane',
         fileNewFolder: 'New Folder',

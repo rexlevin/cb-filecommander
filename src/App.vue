@@ -203,6 +203,33 @@ function openProperties() {
     ui.openProperties(entries.map((entry) => entry.path));
 }
 
+/** 用外部编辑器打开焦点文件（F4） */
+async function openFocusedWithEditor() {
+    const { pane, tab } = activeContext();
+    if (!tab) return;
+    const state = listings.ensure(tab.id);
+    if (state.selected.size > 1) {
+        ui.showToast(t('errors.MULTI_SELECTED'), 'warning');
+        return;
+    }
+    const path = state.focusedPath || (state.selected.size === 1 ? state.selected.values().next().value : null);
+    if (!path) {
+        ui.showToast(t('ops.noSelection'), 'warning');
+        return;
+    }
+    const entry = state.entries.find((item) => item.path === path);
+    if (!entry) return;
+    if (entry.kind === 'dir') {
+        ui.showToast(t('open.editorNotDir'), 'warning');
+        return;
+    }
+    const program = settings.externalEditor;
+    const res = await api.openWith({ path, program });
+    if (!res || !res.ok) {
+        ui.showToast(errorText(res && res.error, t, te), 'danger');
+    }
+}
+
 // ---------------------------------------------------------------------------
 // 剪贴板：Ctrl+C / Ctrl+X / Ctrl+V / Ctrl+Shift+C
 // ---------------------------------------------------------------------------
@@ -252,29 +279,38 @@ async function pasteSelection() {
     if (!tab || !tab.dir) return;
     const targetDir = tab.dir;
 
-    // 内部剪贴板优先
-    if (clipboard.mode !== 'none' && clipboard.paths.length) {
-        const op = clipboard.mode;
-        const sources = clipboard.paths;
-        // 剪切粘贴到源自身目录为无操作；粘贴到源子目录直接拒绝
-        const res = await transfers.start(op, sources, targetDir);
+    try {
+        // 内部剪贴板优先
+        if (clipboard.mode !== 'none' && clipboard.paths.length) {
+            const mode = clipboard.mode;
+            const sources = clipboard.paths;
+            // 剪贴板模式 cut 对应传输引擎的 move 操作
+            const op = mode === 'cut' ? 'move' : 'copy';
+            // 剪切粘贴到源自身目录为无操作；粘贴到源子目录直接拒绝
+            const res = await transfers.start(op, sources, targetDir);
+            if (res && res.ok) {
+                if (mode === 'cut') clipboard.clear();
+                ui.showToast(t('clipboard.pasting'), 'info');
+            } else {
+                ui.showToast(errorText(res && res.error, t, te), 'danger');
+            }
+            return;
+        }
+
+        // 内部剪贴板为空时，从系统剪贴板读取文本路径
+        const systemPaths = await clipboard.readPathsFromSystem();
+        if (!systemPaths.length) {
+            ui.showToast(t('clipboard.empty'), 'warning');
+            return;
+        }
+        const res = await transfers.start('copy', systemPaths, targetDir);
         if (res && res.ok) {
-            if (op === 'cut') clipboard.clear();
+            ui.showToast(t('clipboard.pasting'), 'info');
         } else {
             ui.showToast(errorText(res && res.error, t, te), 'danger');
         }
-        return;
-    }
-
-    // 内部剪贴板为空时，从系统剪贴板读取文本路径
-    const systemPaths = await clipboard.readPathsFromSystem();
-    if (!systemPaths.length) {
-        ui.showToast(t('clipboard.empty'), 'warning');
-        return;
-    }
-    const res = await transfers.start('copy', systemPaths, targetDir);
-    if (!res || !res.ok) {
-        ui.showToast(errorText(res && res.error, t, te), 'danger');
+    } catch (error) {
+        ui.showToast(error && error.message ? error.message : String(error), 'danger');
     }
 }
 
@@ -335,6 +371,9 @@ function handleMenuAction(payload) {
         case 'file.open':
             listings.openFocused(pane, tab.id);
             break;
+        case 'file.openWith':
+            openFocusedWithEditor();
+            break;
         case 'file.newFile':
             openNamePrompt('file');
             break;
@@ -357,6 +396,7 @@ function handleMenuAction(payload) {
             deleteSelection();
             break;
         case 'view.refresh':
+            clipboard.clear();
             listings.refresh(pane, tab.id);
             break;
         case 'view.sort.name':
@@ -484,7 +524,10 @@ function onKeydown(event) {
                 return;
             case 'r':
                 event.preventDefault();
-                if (!event.repeat) listings.refresh(pane, tab.id);
+                if (!event.repeat) {
+                    clipboard.clear();
+                    listings.refresh(pane, tab.id);
+                }
                 return;
             case 'h':
                 event.preventDefault();
@@ -529,6 +572,11 @@ function onKeydown(event) {
         if (event.key === 'F2') {
             event.preventDefault();
             if (!event.repeat) startRename();
+            return;
+        }
+        if (event.key === 'F4') {
+            event.preventDefault();
+            if (!event.repeat) openFocusedWithEditor();
             return;
         }
         if (event.key === 'F5') {

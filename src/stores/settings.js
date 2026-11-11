@@ -52,6 +52,7 @@ export const useSettingsStore = defineStore('settings', () => {
     const restoreWindow = ref(true);
     const zoom = ref(1);
     const columns = ref({ size: 96, mtime: 150, type: 100 });
+    const externalEditor = ref('');
 
     const platform = ref('linux');
     const home = ref('/');
@@ -94,6 +95,7 @@ export const useSettingsStore = defineStore('settings', () => {
         restoreWindow.value = s.restoreWindow !== false;
         zoom.value = Number(s.zoom) || 1;
         columns.value = { size: 96, mtime: 150, type: 100, ...(s.columns || {}) };
+        externalEditor.value = typeof s.externalEditor === 'string' ? s.externalEditor : '';
 
         platform.value = boot.platform || 'linux';
         home.value = boot.home || '/';
@@ -124,6 +126,7 @@ export const useSettingsStore = defineStore('settings', () => {
             case 'restoreWindow': restoreWindow.value = !!value; break;
             case 'zoom': zoom.value = Number(value) || 1; break;
             case 'columns': columns.value = { ...columns.value, ...(value || {}) }; break;
+            case 'externalEditor': externalEditor.value = typeof value === 'string' ? value : ''; break;
             default: return;
         }
         if (key === 'fonts' || key === 'rowHeight') applyTypography();
@@ -162,7 +165,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
     return {
         theme, locale, fonts, rowHeight, showHidden, dirsFirst, showIcons,
-        confirmOverwrite, restoreSession, restoreWindow, zoom, columns,
+        confirmOverwrite, restoreSession, restoreWindow, zoom, columns, externalEditor,
         platform, home, version, electron, arch, homepage, appName, isDark,
         hydrate, set, bindEvents
     };

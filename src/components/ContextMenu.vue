@@ -39,6 +39,7 @@ import { usePanesStore } from '@/stores/panes';
 import { useListingsStore } from '@/stores/listings';
 import { useTransfersStore } from '@/stores/transfers';
 import { useClipboardStore } from '@/stores/clipboard';
+import { useSettingsStore } from '@/stores/settings';
 import { isDirEntry } from '@/utils/sort';
 import { errorText } from '@/utils/format';
 
@@ -49,6 +50,7 @@ const panes = usePanesStore();
 const listings = useListingsStore();
 const transfers = useTransfersStore();
 const clipboard = useClipboardStore();
+const settings = useSettingsStore();
 
 const ctx = computed(() => ui.contextMenu);
 const isSingle = computed(() => ctx.value && ctx.value.paths.length === 1);
@@ -70,6 +72,7 @@ const menuStyle = computed(() => {
 const items = computed(() => {
     const list = [];
     if (!ctx.value) return list;
+    const hasEditor = !!settings.externalEditor;
 
     if (hasSelection.value) {
         // 打开（单选时可用；多选禁用）
@@ -78,6 +81,14 @@ const items = computed(() => {
             label: t('ctx.open'),
             shortcut: 'Enter',
             disabled: ctx.value.paths.length > 1
+        });
+        // 用外部编辑器打开（仅单选文件；目录或多选禁用）
+        const canUseEditor = isSingle.value && singleEntry.value && singleEntry.value.kind === 'file' && hasEditor;
+        list.push({
+            action: 'openWithEditor',
+            label: t('ctx.openWithEditor'),
+            shortcut: 'F4',
+            disabled: !canUseEditor
         });
         // 在新标签打开（仅单选目录）
         if (singleIsDir.value) {
@@ -159,6 +170,14 @@ async function onItemClick(action) {
             }
             break;
         }
+        case 'openWithEditor': {
+            if (c.entry) {
+                const program = settings.externalEditor;
+                const res = await api.openWith({ path: c.entry.path, program });
+                if (!res || !res.ok) ui.showToast(errorText(res && res.error, t, te), 'danger');
+            }
+            break;
+        }
         case 'openInNewTab': {
             if (c.entry && isDirEntry(c.entry)) {
                 const tab = panes.addTab(c.pane);
@@ -218,6 +237,7 @@ async function onItemClick(action) {
             break;
         }
         case 'refresh': {
+            clipboard.clear();
             listings.refresh(c.pane, c.tabId);
             break;
         }
@@ -230,23 +250,34 @@ async function doPaste(pane) {
     const tab = panes.activeTab(pane);
     if (!tab || !tab.dir) return;
     const targetDir = tab.dir;
-    if (clipboard.mode !== 'none' && clipboard.paths.length) {
-        const op = clipboard.mode;
-        const res = await transfers.start(op, clipboard.paths, targetDir);
+    try {
+        if (clipboard.mode !== 'none' && clipboard.paths.length) {
+            const mode = clipboard.mode;
+            // 剪贴板模式 cut 对应传输引擎的 move 操作
+            const op = mode === 'cut' ? 'move' : 'copy';
+            const res = await transfers.start(op, clipboard.paths, targetDir);
+            if (res && res.ok) {
+                if (mode === 'cut') clipboard.clear();
+                ui.showToast(t('clipboard.pasting'), 'info');
+            } else {
+                ui.showToast(errorText(res && res.error, t, te), 'danger');
+            }
+            return;
+        }
+        const systemPaths = await clipboard.readPathsFromSystem();
+        if (!systemPaths.length) {
+            ui.showToast(t('clipboard.empty'), 'warning');
+            return;
+        }
+        const res = await transfers.start('copy', systemPaths, targetDir);
         if (res && res.ok) {
-            if (op === 'cut') clipboard.clear();
+            ui.showToast(t('clipboard.pasting'), 'info');
         } else {
             ui.showToast(errorText(res && res.error, t, te), 'danger');
         }
-        return;
+    } catch (error) {
+        ui.showToast(error && error.message ? error.message : String(error), 'danger');
     }
-    const systemPaths = await clipboard.readPathsFromSystem();
-    if (!systemPaths.length) {
-        ui.showToast(t('clipboard.empty'), 'warning');
-        return;
-    }
-    const res = await transfers.start('copy', systemPaths, targetDir);
-    if (!res || !res.ok) ui.showToast(errorText(res && res.error, t, te), 'danger');
 }
 
 function onMaskClick(event) {
