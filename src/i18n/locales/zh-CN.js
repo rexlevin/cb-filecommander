@@ -96,6 +96,9 @@ export default {
         hint: '输入名称筛选',
         clear: '清除筛选'
     },
+    quickSearch: {
+        label: '搜索：'
+    },
     open: {
         execTitle: '打开可执行文件',
         execMessage: '确定要运行「{name}」吗？',

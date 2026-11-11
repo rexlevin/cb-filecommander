@@ -110,6 +110,22 @@
             </template>
         </div>
 
+        <!-- 快速搜索输入框（doubleCommander 风格） -->
+        <transition name="toast">
+            <div v-if="quickSearch" class="quick-search-bar">
+                <span class="quick-search-label">{{ t('quickSearch.label') }}</span>
+                <input
+                    ref="quickSearchInputRef"
+                    v-model="quickSearch"
+                    class="quick-search-input"
+                    spellcheck="false"
+                    tabindex="-1"
+                    readonly
+                />
+                <span class="quick-search-count">{{ matchList.length }}/{{ sorted.length }}</span>
+            </div>
+        </transition>
+
         <transition name="toast">
             <div v-if="toast" class="toast">{{ toast }}</div>
         </transition>
@@ -151,10 +167,10 @@ const scrollTop = ref(0);
 const viewport = ref(600);
 const toast = ref('');
 const dragOverPath = ref(null); // '' 表示空白区域，null 表示无
-const typeBuffer = ref('');
+const quickSearch = ref('');
+const quickSearchInputRef = ref(null);
 let toastTimer = null;
 let observer = null;
-let typeTimer = null;
 
 const tab = computed(() => panes.activeTab(props.pane));
 const st = computed(() => listings.ensure(tab.value.id));
@@ -171,15 +187,28 @@ const iconSize = computed(() => {
 });
 
 const sorted = computed(() => {
-    const list = sortEntries(st.value.entries, {
+    let list = sortEntries(st.value.entries, {
         by: st.value.sort.by,
         desc: st.value.sort.desc,
         dirsFirst: settings.dirsFirst
     });
-    const filter = (st.value.filter || '').trim().toLowerCase();
-    if (!filter) return list;
-    return list.filter((entry) => entry.name.toLowerCase().includes(filter));
+    // 持久 filter（Ctrl+F FilterBar）：子串匹配，影响列表显示和导航
+    const persistent = (st.value.filter || '').trim().toLowerCase();
+    if (persistent) {
+        list = list.filter((entry) => entry.name.toLowerCase().includes(persistent));
+    }
+    return list;
 });
+
+/** 快速搜索匹配到的条目（前缀匹配，用于导航但不影响显示） */
+const matchList = computed(() => {
+    const quick = quickSearch.value.trim().toLowerCase();
+    if (!quick) return [];
+    return sorted.value.filter((entry) => entry.name.toLowerCase().startsWith(quick));
+});
+
+/** 导航候选：快速搜索激活时 = matchList（可能为空→无候选），否则 = sorted 全量 */
+const navList = computed(() => quickSearch.value.length ? matchList.value : sorted.value);
 
 const startIndex = computed(() => Math.max(0, Math.floor(scrollTop.value / rowHeight.value) - 3));
 const endIndex = computed(() => Math.min(
@@ -300,6 +329,7 @@ function onRowClick(entry, event) {
 async function onRowDblClick(entry) {
     panes.activatePane(props.pane);
     listings.selectOnly(tabId.value, entry.path);
+    closeQuickSearch();
     await listings.open(props.pane, tabId.value, entry);
 }
 
@@ -474,7 +504,7 @@ function isEditable(target) {
 }
 
 function moveFocus(delta, { extend = false, page = false } = {}) {
-    const list = sorted.value;
+    const list = navList.value;
     if (!list.length) return;
     const pageSize = Math.max(1, Math.floor(viewport.value / rowHeight.value) - 1);
     let index = list.findIndex((entry) => entry.path === st.value.focusedPath);
@@ -486,7 +516,7 @@ function moveFocus(delta, { extend = false, page = false } = {}) {
 }
 
 function focusOnly(delta) {
-    const list = sorted.value;
+    const list = navList.value;
     if (!list.length) return;
     let index = list.findIndex((entry) => entry.path === st.value.focusedPath);
     if (index < 0) index = -1;
@@ -495,7 +525,7 @@ function focusOnly(delta) {
 }
 
 function toggleCurrent(moveAfter) {
-    const list = sorted.value;
+    const list = navList.value;
     if (!list.length) return;
     const current = list.find((entry) => entry.path === st.value.focusedPath) || list[0];
     listings.toggleSelection(tabId.value, current.path);
@@ -503,6 +533,36 @@ function toggleCurrent(moveAfter) {
 }
 
 function onKeydown(event) {
+    // --- 最高优先级：快速搜索的按键处理，在所有守卫之前 ---
+    // 即使浏览器把焦点转移到了 readonly input 上，这些按键也必须能正常响应
+    if (quickSearch.value) {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            closeQuickSearch();
+            return;
+        }
+        if (event.key === 'Backspace') {
+            event.preventDefault();
+            event.stopPropagation();
+            quickSearch.value = quickSearch.value.slice(0, -1);
+            ensureFirstMatchFocused();
+            return;
+        }
+        if (event.key === 'Enter') {
+            // 快速搜索激活时先关闭，再让事件冒泡给 App.vue 打开文件
+            closeQuickSearch();
+            // 不 return，让事件继续走下去
+        }
+        if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            event.preventDefault();
+            event.stopPropagation();
+            quickSearch.value += event.key;
+            ensureFirstMatchFocused();
+            return;
+        }
+    }
+
     if (ui.settingsOpen || ui.helpOpen || ui.namePrompt || ui.properties) return;
     if (props.pane !== panes.activePane) return;
     if (event.defaultPrevented || event.isComposing || isEditable(event.target)) return;
@@ -537,19 +597,28 @@ function onKeydown(event) {
             break;
         case 'Home':
             event.preventDefault();
-            if (sorted.value.length) {
-                const first = sorted.value[0];
-                if (event.shiftKey) listings.extendSelection(tabId.value, first.path, sorted.value);
-                else listings.selectOnly(tabId.value, first.path);
+            {
+                const list = navList.value;
+                if (list.length) {
+                    const first = list[0];
+                    if (event.shiftKey) listings.extendSelection(tabId.value, first.path, list);
+                    else listings.selectOnly(tabId.value, first.path);
+                }
             }
             break;
         case 'End':
             event.preventDefault();
-            if (sorted.value.length) {
-                const last = sorted.value[sorted.value.length - 1];
-                if (event.shiftKey) listings.extendSelection(tabId.value, last.path, sorted.value);
-                else listings.selectOnly(tabId.value, last.path);
+            {
+                const list = navList.value;
+                if (list.length) {
+                    const last = list[list.length - 1];
+                    if (event.shiftKey) listings.extendSelection(tabId.value, last.path, list);
+                    else listings.selectOnly(tabId.value, last.path);
+                }
             }
+            break;
+        case 'Enter':
+            // 快速搜索已在上方分支 closeQuickSearch，这里正常冒泡
             break;
         case ' ':
             event.preventDefault();
@@ -559,48 +628,30 @@ function onKeydown(event) {
             event.preventDefault();
             toggleCurrent(true);
             break;
-        case 'Backspace':
-            // 类型定位缓冲内删除字符
-            if (typeBuffer.value) {
-                event.preventDefault();
-                typeBuffer.value = typeBuffer.value.slice(0, -1);
-                resetTypeTimer();
-            }
-            break;
         default:
-            // 类型定位：可打印字符
+            // 首次输入可打印字符：开启快速搜索并追加字符
             if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
                 event.preventDefault();
-                typeBuffer.value += event.key;
-                resetTypeTimer();
-                typeAheadJump();
+                event.stopPropagation();
+                quickSearch.value = event.key;
+                ensureFirstMatchFocused();
             }
             break;
     }
 }
 
-function resetTypeTimer() {
-    if (typeTimer) clearTimeout(typeTimer);
-    typeTimer = setTimeout(() => {
-        typeBuffer.value = '';
-        typeTimer = null;
-    }, 500);
+function closeQuickSearch() {
+    quickSearch.value = '';
 }
 
-function typeAheadJump() {
-    const list = sorted.value;
-    if (!list.length || !typeBuffer.value) return;
-    const prefix = typeBuffer.value.toLowerCase();
-    const currentIndex = list.findIndex((entry) => entry.path === st.value.focusedPath);
-    const start = currentIndex + 1;
-    // 从当前焦点的下一项开始循环查找
-    for (let i = 0; i < list.length; i++) {
-        const idx = (start + i) % list.length;
-        if (list[idx].name.toLowerCase().startsWith(prefix)) {
-            listings.selectOnly(tabId.value, list[idx].path);
-            return;
-        }
-    }
+/** 快速搜索输入变化后，确保有可聚焦的匹配项；无匹配则保持原焦点不动 */
+function ensureFirstMatchFocused() {
+    const list = navList.value;
+    if (!list.length) return;
+    // 当前焦点已在 navList 内 → 保持
+    if (list.some((entry) => entry.path === st.value.focusedPath)) return;
+    // 否则聚焦 navList 第一项
+    listings.selectOnly(tabId.value, list[0].path);
 }
 
 onMounted(() => {
@@ -614,7 +665,6 @@ onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKeydown);
     if (observer) observer.disconnect();
     if (toastTimer) clearTimeout(toastTimer);
-    if (typeTimer) clearTimeout(typeTimer);
 });
 </script>
 
@@ -882,5 +932,52 @@ onBeforeUnmount(() => {
 .toast-enter-from,
 .toast-leave-to {
     opacity: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* 快速搜索输入栏（doubleCommander 风格）                               */
+/* ------------------------------------------------------------------ */
+.quick-search-bar {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    background: var(--panel-head);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    z-index: 20;
+}
+
+.quick-search-label {
+    flex: 0 0 auto;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.quick-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 20px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 2px;
+    background: var(--panel-bg);
+    color: var(--text);
+    font-size: var(--tab-font-size);
+    outline: none;
+}
+
+.quick-search-count {
+    flex: 0 0 auto;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
 }
 </style>

@@ -96,6 +96,9 @@ export default {
         hint: 'Type to filter',
         clear: 'Clear filter'
     },
+    quickSearch: {
+        label: 'Search:'
+    },
     open: {
         execTitle: 'Open Executable File',
         execMessage: 'Are you sure you want to run "{name}"?',
