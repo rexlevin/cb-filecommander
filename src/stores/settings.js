@@ -84,6 +84,9 @@ export const useSettingsStore = defineStore('settings', () => {
             root.style.setProperty(`--${area}-font-family`, fontStack(fonts.value[area].family));
             root.style.setProperty(`--${area}-font-size`, `${fonts.value[area].size}px`);
         }
+        // 列标题字号 = tab 字号 - 5
+        const tabSize = fonts.value.tab?.size || 12;
+        root.style.setProperty('--header-font-size', `${Math.max(8, tabSize - 5)}px`);
     }
 
     function applyLocale(resolved) {
