@@ -200,6 +200,17 @@ const sorted = computed(() => {
     return list;
 });
 
+/**
+ * 目录加载完成后如果快速搜索已激活，重新确保聚焦命中项。
+ * 解决竞态：用户 Enter 进入新目录后 entries 先被清空，
+ * 此时立即输入快速搜索会因 sorted 为空而无法聚焦。
+ */
+watch(() => sorted.value.length, (len, prevLen) => {
+    if (prevLen === 0 && len > 0 && quickSearch.value) {
+        nextTick(() => ensureFirstMatchFocused());
+    }
+});
+
 /** 快速搜索匹配到的条目（前缀匹配，用于导航但不影响显示） */
 const matchList = computed(() => {
     const quick = quickSearch.value.trim().toLowerCase();
