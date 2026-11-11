@@ -192,6 +192,7 @@ export default {
         fontSize: 'Size',
         fontSizeUnit: 'px',
         rowHeight: 'Row Height',
+        rowHeightAuto: 'Auto with Font Size',
         showIcons: 'Show File Icons',
         fontFile: 'File Panel',
         fontTab: 'Tabs & Path Bar',

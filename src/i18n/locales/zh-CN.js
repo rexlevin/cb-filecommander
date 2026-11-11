@@ -192,6 +192,7 @@ export default {
         fontSize: '字号',
         fontSizeUnit: 'px',
         rowHeight: '行高',
+        rowHeightAuto: '跟随字号自动调整',
         showIcons: '显示文件图标',
         fontFile: '文件面板',
         fontTab: '标签与路径栏',

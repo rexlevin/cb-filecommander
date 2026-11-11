@@ -45,7 +45,7 @@
                             <button
                                 class="step-btn"
                                 type="button"
-                                :disabled="settings.rowHeight <= 20"
+                                :disabled="settings.rowHeight <= 20 || settings.rowHeightAuto"
                                 @click="stepRowHeight(-2)"
                             >−</button>
                             <input
@@ -53,15 +53,25 @@
                                 type="number"
                                 readonly
                                 :value="settings.rowHeight"
+                                :disabled="settings.rowHeightAuto"
                             />
                             <button
                                 class="step-btn"
                                 type="button"
-                                :disabled="settings.rowHeight >= 45"
+                                :disabled="settings.rowHeight >= 45 || settings.rowHeightAuto"
                                 @click="stepRowHeight(2)"
                             >+</button>
                             <span class="unit">{{ t('settings.fontSizeUnit') }}</span>
                         </span>
+                        <label class="switch inline">
+                            <input
+                                type="checkbox"
+                                :checked="settings.rowHeightAuto"
+                                @change="settings.set('rowHeightAuto', $event.target.checked)"
+                            />
+                            <span class="switch-track"></span>
+                            <span class="switch-label">{{ t('settings.rowHeightAuto') }}</span>
+                        </label>
                     </div>
 
                     <div class="field">
@@ -654,6 +664,25 @@ function onExternalEditorChange(event) {
 .switch input:focus-visible + .switch-track {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+}
+
+.switch.inline {
+    width: auto;
+    height: auto;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+}
+
+.switch.inline .switch-track {
+    flex-shrink: 0;
+}
+
+.switch-label {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    user-select: none;
+    white-space: nowrap;
 }
 
 .about {

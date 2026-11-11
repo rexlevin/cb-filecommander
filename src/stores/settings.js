@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import i18n from '@/i18n';
 
 const api = window.filecommander;
@@ -44,6 +44,7 @@ export const useSettingsStore = defineStore('settings', () => {
     const locale = ref('system');
     const fonts = ref(normalizeFonts(DEFAULT_FONTS));
     const rowHeight = ref(26);
+    const rowHeightAuto = ref(true); // 自动跟随文件字号
     const showHidden = ref(false);
     const dirsFirst = ref(true);
     const showIcons = ref(true);
@@ -67,6 +68,14 @@ export const useSettingsStore = defineStore('settings', () => {
         document.documentElement.classList.toggle('dark', isDark.value);
     }
 
+    // 推荐行高 = 文件字号 + 13（默认 13 + 13 = 26）
+    const recommendedRowHeight = computed(() => Math.round((fonts.value.file?.size || 13) + 13));
+
+    /** 自动模式下把 rowHeight 对齐到推荐值 */
+    function syncRowHeight() {
+        if (rowHeightAuto.value) rowHeight.value = recommendedRowHeight.value;
+    }
+
     function applyTypography() {
         const root = document.documentElement;
         root.style.setProperty('--row-height', `${rowHeight.value}px`);
@@ -86,7 +95,8 @@ export const useSettingsStore = defineStore('settings', () => {
         theme.value = s.theme || 'system';
         locale.value = s.locale || 'system';
         fonts.value = normalizeFonts(s.fonts);
-        rowHeight.value = s.rowHeight || 26;
+        rowHeightAuto.value = s.rowHeightAuto !== false;
+        rowHeight.value = rowHeightAuto.value ? recommendedRowHeight.value : (s.rowHeight || 26);
         showHidden.value = !!s.showHidden;
         dirsFirst.value = s.dirsFirst !== false;
         showIcons.value = s.showIcons !== false;
@@ -116,8 +126,9 @@ export const useSettingsStore = defineStore('settings', () => {
         switch (key) {
             case 'theme': theme.value = value; break;
             case 'locale': locale.value = value; break;
-            case 'fonts': fonts.value = normalizeFonts(value); break;
-            case 'rowHeight': rowHeight.value = value; break;
+            case 'fonts': fonts.value = normalizeFonts(value); syncRowHeight(); break;
+            case 'rowHeight': rowHeight.value = value; rowHeightAuto.value = false; break;
+            case 'rowHeightAuto': rowHeightAuto.value = !!value; syncRowHeight(); break;
             case 'showHidden': showHidden.value = !!value; break;
             case 'dirsFirst': dirsFirst.value = !!value; break;
             case 'showIcons': showIcons.value = !!value; break;
@@ -129,7 +140,7 @@ export const useSettingsStore = defineStore('settings', () => {
             case 'externalEditor': externalEditor.value = typeof value === 'string' ? value : ''; break;
             default: return;
         }
-        if (key === 'fonts' || key === 'rowHeight') applyTypography();
+        if (key === 'fonts' || key === 'rowHeight' || key === 'rowHeightAuto') applyTypography();
     }
 
     // IPC 使用结构化克隆，先转为纯对象，避免 Vue 响应式代理无法序列化
@@ -164,7 +175,7 @@ export const useSettingsStore = defineStore('settings', () => {
     }
 
     return {
-        theme, locale, fonts, rowHeight, showHidden, dirsFirst, showIcons,
+        theme, locale, fonts, rowHeight, rowHeightAuto, recommendedRowHeight, showHidden, dirsFirst, showIcons,
         confirmOverwrite, restoreSession, restoreWindow, zoom, columns, externalEditor,
         platform, home, version, electron, arch, homepage, appName, isDark,
         hydrate, set, bindEvents

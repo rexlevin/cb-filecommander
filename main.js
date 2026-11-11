@@ -95,6 +95,8 @@ function validateSetting(key, value) {
             return value !== null && typeof value === 'object' && !Array.isArray(value);
         case 'externalEditor':
             return typeof value === 'string' && value.length <= 500;
+        case 'rowHeightAuto':
+            return typeof value === 'boolean';
         case 'showHidden':
         case 'dirsFirst':
         case 'showIcons':
