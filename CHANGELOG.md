@@ -6,6 +6,30 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.2] - 2026-11-11
+
+### feat | 新功能 / Features
+
+F4 快捷键使用外部编辑器打开文件，可在设置的"行为"分区配置编辑器路径（留空回退系统默认）
+右键菜单新增"用外部编辑器打开"入口
+剪贴板粘贴操作增加成功与失败提示，错误可见
+
+F4 opens the focused file with an external editor, configurable in Settings > Behavior (falls back to system default when empty)
+Context menu gains an "Open with External Editor" entry
+Paste operations now show success/failure toasts with visible errors
+
+### fix | 问题修复 / Bug Fixes
+
+修复 Ctrl+V 与右键粘贴完全无反应的问题（IPC 响应式对象无法克隆导致静默失败）
+修复剪切粘贴报"路径无效"的问题（剪贴板 cut 模式未映射为传输操作 move）
+修复剪切后文件变色、Ctrl+R 或"刷新"后无法恢复原色的问题
+修复属性对话框传参可能失败的问题
+
+Fixed paste (Ctrl+V / context menu) doing nothing due to IPC structured-clone failure on reactive objects
+Fixed "invalid path" error on cut-paste caused by clipboard cut mode not being mapped to the move operation
+Fixed cut highlighting not being restored after Ctrl+R or menu refresh
+Fixed a potential parameter passing failure in the properties dialog
+
 ## [0.1.1] - 2026-11-11
 
 ### feat | 新功能 / Features
