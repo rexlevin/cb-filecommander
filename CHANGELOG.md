@@ -6,6 +6,24 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.4] - 2026-11-11
+
+### fix | 问题修复 / Bug Fixes
+
+修复 Shift+F4 被误判为 F4（外部编辑器打开），导致无法新建文件并提示"请先选择文件或文件夹"的问题
+
+Fix Shift+F4 being treated as plain F4 (open with external editor), which blocked new-file creation and showed "please select a file or folder"
+
+### style | 样式 / Styling
+
+活动面板的地址栏增加强调色淡底，强化聚焦标识
+
+Add accent-tinted background to the active pane's path bar for a clearer focus indicator
+
+快速搜索输入框由悬浮覆盖改为占用独立行，长文件列表时不再遮挡最后一行
+
+Quick search bar now occupies its own row instead of overlaying the list, so the last row is no longer obscured in long file lists
+
 ## [0.1.3] - 2026-11-11
 
 ### feat | 新功能 / Features
