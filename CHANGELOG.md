@@ -6,6 +6,20 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.1] - 2026-11-11
+
+### feat | 新功能 / Features
+
+文件列表支持 doubleCommander 风格快速搜索：输入时底部弹出悬浮输入框，显示搜索内容和匹配计数；列表保持全量可见，上下键仅在匹配条目前缀范围内轮换；Enter / 双击 / Esc 均可关闭搜索框；支持退格修改、输入错误即时修正
+
+File list now supports doubleCommander-style quick search: typing triggers a floating input bar at the bottom showing the query and match count; the full list remains visible while arrow keys navigate only among prefix-matched entries; Enter / double-click / Esc all close the search bar; backspace supports incremental correction
+
+### build | 构建 / Build
+
+更新 package.json 版本号至 0.1.1
+
+Bump package.json version to 0.1.1
+
 ## [0.1.0] - 2026-11-10
 
 ### feat | 新功能 / Features
