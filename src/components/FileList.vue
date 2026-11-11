@@ -946,23 +946,17 @@ onBeforeUnmount(() => {
 }
 
 /* ------------------------------------------------------------------ */
-/* 快速搜索输入栏（doubleCommander 风格）                               */
+/* 快速搜索输入栏（doubleCommander 风格，占用独立行而非悬浮遮挡）       */
 /* ------------------------------------------------------------------ */
 .quick-search-bar {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
     display: flex;
     align-items: center;
     gap: 6px;
-    height: 26px;
-    padding: 0 8px;
-    border: 1px solid var(--accent);
-    border-radius: 4px;
+    flex: 0 0 30px;
+    height: 30px;
+    padding: 0 10px;
+    border-top: 1px solid var(--border);
     background: var(--panel-head);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-    z-index: 20;
 }
 
 .quick-search-label {

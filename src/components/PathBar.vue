@@ -245,6 +245,11 @@ onBeforeUnmount(() => {
     border-bottom: 1px solid var(--border);
 }
 
+/* 活动面板的地址栏使用强调色淡底，强化聚焦标识 */
+.path-bar.is-active-pane {
+    background: var(--selected);
+}
+
 .nav-buttons {
     display: flex;
     flex: 0 0 auto;
