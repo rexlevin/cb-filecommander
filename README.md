@@ -27,7 +27,7 @@ FileCommander is a fast, no-frills file manager for people who live on the keybo
 
 - **Dual panes, multi-tab** — independent left/right panes, up to 7 tabs per side, per-tab history, and optional session restore on startup.
 - **Built for large folders** — two-phase directory loading (names first, sizes/dates streamed in) and a virtualized list that stays smooth in folders with 100,000+ entries.
-- **Safe copy & move queue** — background tasks with progress, speed, ETA and cancel; conflict handling with overwrite / skip / rename / "apply to all"; temporary file + atomic rename so a failed copy never leaves a half-written file.
+- **Safe copy & move queue** — background tasks with progress, speed, ETA and cancel; conflict handling with overwrite / skip / rename / "apply to all"; copying into the same folder silently creates `copy1_name` / `copy2_name` instead of asking; temporary file + atomic rename so a failed copy never leaves a half-written file. `.asar` archives are handled as plain files.
 - **Complete keyboard workflow** — navigate, select, rename, create, copy, move, switch panes and reorder tabs without touching the mouse. Press `F1` for the full cheat sheet.
 - **Quick filter & type-ahead** — filter the current folder with `Ctrl+F` without losing your selection; just start typing to jump to a matching name.
 - **Clipboard that cooperates** — internal copy/cut/paste between panes, plus path-text interop with other apps and `Ctrl+Shift+C` to copy absolute paths.
@@ -133,7 +133,7 @@ FileCommander 是一款轻量、双栏、多标签、键盘优先的文件管理
 
 - **双栏 + 多标签**：左右面板互相独立，每侧最多 7 个标签，各自保留浏览历史，可恢复上次会话。
 - **为超大目录而生**：两阶段列目录（先出名称，大小/时间流式补齐）+ 虚拟列表，10 万项目录依然流畅。
-- **安全的复制/移动队列**：后台任务带进度、速度、剩余时间与取消；冲突支持覆盖 / 跳过 / 重命名 / 全部应用；先写临时文件再原子重命名，失败不会留下半截文件。
+- **安全的复制/移动队列**：后台任务带进度、速度、剩余时间与取消；冲突支持覆盖 / 跳过 / 重命名 / 全部应用；在同一目录内复制时不再询问，直接生成 `copy1_原名` / `copy2_原名`；先写临时文件再原子重命名，失败不会留下半截文件；`.asar` 归档按普通文件处理。
 - **完整键盘操作**：导航、选择、重命名、新建、复制、移动、切面板、调标签顺序都能脱离鼠标完成，按 `F1` 查看全部快捷键。
 - **快速筛选与类型定位**：`Ctrl+F` 筛选当前目录且不影响选择；直接输入字符即可跳到匹配项。
 - **剪贴板互操作**：面板间内部复制/剪切/粘贴，并支持与其他程序的路径文本互通，`Ctrl+Shift+C` 复制绝对路径。
