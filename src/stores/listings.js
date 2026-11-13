@@ -125,7 +125,7 @@ export const useListingsStore = defineStore('listings', () => {
     async function openDir(pane, tabId, dir, { mode = 'push', focusOnEntry = null } = {}) {
         if (!dir) return;
         const state = ensure(tabId);
-        if (mode === 'refresh' && state.loading) return;
+        if (mode === 'refresh' && state.loading && !focusOnEntry) return;
 
         const previousSelection = mode === 'refresh' ? state.selected : null;
         const previousFocus = mode === 'refresh' ? state.focusedPath : null;
@@ -180,10 +180,15 @@ export const useListingsStore = defineStore('listings', () => {
 
         if (mode === 'refresh') {
             const paths = new Set(state.entries.map((entry) => entry.path));
-            state.selected = new Set([...previousSelection].filter((path) => paths.has(path)));
-            state.focusedPath = previousFocus && paths.has(previousFocus)
-                ? previousFocus
-                : (state.selected.values().next().value || null);
+            const hasFocusOnEntry = !!(focusOnEntry && paths.has(focusOnEntry));
+            state.selected = hasFocusOnEntry
+                ? new Set([focusOnEntry])
+                : new Set([...previousSelection].filter((path) => paths.has(path)));
+            state.focusedPath = hasFocusOnEntry
+                ? focusOnEntry
+                : (previousFocus && paths.has(previousFocus)
+                    ? previousFocus
+                    : (state.selected.values().next().value || null));
             state.anchorPath = state.focusedPath;
         } else {
             if (mode === 'push') pushHistory(state, dir);
@@ -216,9 +221,9 @@ export const useListingsStore = defineStore('listings', () => {
         else openDir(pane, tabId, dir, { mode: state.dir === dir ? 'refresh' : 'push' });
     }
 
-    function refresh(pane, tabId) {
+    function refresh(pane, tabId, { focusOnEntry = null } = {}) {
         const state = ensure(tabId);
-        if (state.dir) openDir(pane, tabId, state.dir, { mode: 'refresh' });
+        if (state.dir) openDir(pane, tabId, state.dir, { mode: 'refresh', focusOnEntry });
     }
 
     function navigate(pane, tabId, dir) {

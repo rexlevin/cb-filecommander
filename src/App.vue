@@ -50,6 +50,7 @@ const ui = useUiStore();
 let offMenuAction = null;
 let offDirChanged = null;
 let offTransferDone = null;
+const pendingDeleteFocus = [];
 
 function clampZoom(value) {
     return Math.min(2, Math.max(0.5, Math.round(value * 10) / 10));
@@ -92,14 +93,43 @@ function activeContext() {
     return { pane, tab };
 }
 
-/** 当前面板选中项，按列表排序顺序返回 */
-function selectedEntries(pane, tab) {
-    const state = listings.ensure(tab.id);
+function orderedEntries(state) {
     return sortEntries(state.entries, {
         by: state.sort.by,
         desc: state.sort.desc,
         dirsFirst: settings.dirsFirst
-    }).filter((entry) => state.selected.has(entry.path));
+    });
+}
+
+/** 当前面板选中项，按列表排序顺序返回 */
+function selectedEntries(pane, tab) {
+    const state = listings.ensure(tab.id);
+    return orderedEntries(state).filter((entry) => state.selected.has(entry.path));
+}
+
+/** 删除后优先选选区之后的可见项，没有则选选区之前的可见项 */
+function deleteFocusCandidate(state, entries) {
+    const ordered = orderedEntries(state);
+    const deletedPaths = new Set(entries.map((entry) => entry.path));
+    let first = -1;
+    let last = -1;
+    for (let i = 0; i < ordered.length; i += 1) {
+        if (!deletedPaths.has(ordered[i].path)) continue;
+        if (first < 0) first = i;
+        last = i;
+    }
+    if (first < 0) return null;
+
+    const filter = (state.filter || '').trim().toLowerCase();
+    const isCandidate = (entry) => !deletedPaths.has(entry.path)
+        && (!filter || entry.name.toLowerCase().includes(filter));
+    for (let i = last + 1; i < ordered.length; i += 1) {
+        if (isCandidate(ordered[i])) return ordered[i].path;
+    }
+    for (let i = first - 1; i >= 0; i -= 1) {
+        if (isCandidate(ordered[i])) return ordered[i].path;
+    }
+    return null;
 }
 
 async function transferSelection(op) {
@@ -164,8 +194,16 @@ async function deleteSelection() {
     });
     if (!confirmed) return;
 
+    const focusRequest = {
+        pane,
+        tabId: tab.id,
+        path: deleteFocusCandidate(listings.ensure(tab.id), entries)
+    };
+    pendingDeleteFocus.push(focusRequest);
     const res = await transfers.start('delete', entries.map((entry) => entry.path));
     if (!res || !res.ok) {
+        const index = pendingDeleteFocus.indexOf(focusRequest);
+        if (index >= 0) pendingDeleteFocus.splice(index, 1);
         ui.showToast(errorText(res && res.error, t, te), 'danger');
     }
 }
@@ -660,15 +698,21 @@ function onKeydown(event) {
     }
 }
 
-function refreshActiveTabs({ onlyStale = false } = {}) {
+function refreshActiveTabs({ onlyStale = false, focus = null } = {}) {
     const now = Date.now();
+    let focusRefreshed = false;
     for (const pane of ['left', 'right']) {
         const tab = panes.activeTab(pane);
         if (!tab) continue;
         const state = listings.ensure(tab.id);
         if (!state.dir) continue;
         if (onlyStale && now - state.lastLoadedAt < 2000) continue;
-        listings.refresh(pane, tab.id);
+        const hasFocus = focus && focus.tabId === tab.id;
+        if (hasFocus) focusRefreshed = true;
+        listings.refresh(pane, tab.id, { focusOnEntry: hasFocus ? focus.path : null });
+    }
+    if (focus && !focusRefreshed) {
+        listings.refresh(focus.pane, focus.tabId, { focusOnEntry: focus.path });
     }
 }
 
@@ -703,8 +747,13 @@ onMounted(() => {
     offMenuAction = api.onMenuAction(handleMenuAction);
     offDirChanged = api.onDirChanged(onDirChanged);
     offTransferDone = api.onTransferDone((payload) => {
+        let focus = null;
+        if (payload && payload.op === 'delete') {
+            const request = pendingDeleteFocus.shift();
+            if (request && payload.deleted > 0) focus = request;
+        }
         transfers.handleDone(payload);
-        refreshActiveTabs();
+        refreshActiveTabs({ focus });
     });
     window.addEventListener('beforeunload', flushSession);
     window.addEventListener('focus', onWindowFocus);
