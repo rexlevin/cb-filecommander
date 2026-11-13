@@ -2,35 +2,47 @@
     <defs>
         <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#4F8DF7"/>
-            <stop offset="1" stop-color="#5B7186"/>
+            <stop offset="1" stop-color="#4E6478"/>
         </linearGradient>
         <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#FFFFFF"/>
-            <stop offset="1" stop-color="#E7EDF7"/>
+            <stop offset="1" stop-color="#E4EBF6"/>
         </linearGradient>
+        <clipPath id="clip">
+            <rect x="0" y="0" width="512" height="512" rx="88"/>
+        </clipPath>
     </defs>
 
-    <!-- 背景：蓝灰渐变圆角方形 -->
-    <rect x="32" y="32" width="448" height="448" rx="104" fill="url(#bg)"/>
-    <path d="M32 176 C32 72 104 32 200 32 H256 C112 56 56 136 32 256 Z" fill="#FFFFFF" opacity="0.12"/>
+    <!-- 保留极小的外边距（512 画布内缩 12px），既贴边又不至于完全顶满 -->
+    <g transform="translate(12 12) scale(0.953125)">
+    <g clip-path="url(#clip)">
+        <!-- 背景：蓝灰渐变 -->
+        <rect x="0" y="0" width="512" height="512" fill="url(#bg)"/>
+        <path d="M0 150 C0 40 78 0 178 0 H512 V96 C330 108 150 190 0 292 Z" fill="#FFFFFF" opacity="0.10"/>
 
-    <!-- 左面板 -->
-    <rect x="76" y="118" width="168" height="276" rx="22" fill="url(#panel)"/>
-    <path d="M98 118 H222 A22 22 0 0 1 244 140 V170 H76 V140 A22 22 0 0 1 98 118 Z" fill="#D8E3F5"/>
-    <rect x="76" y="164" width="168" height="5" fill="#3B82F6"/>
-    <!-- 左面板文件夹轮廓 -->
-    <path d="M114 236 H142 L154 250 H196 A10 10 0 0 1 206 260 V298 A10 10 0 0 1 196 308 H114 A10 10 0 0 1 104 298 V246 A10 10 0 0 1 114 236 Z"
-          fill="none" stroke="#3B82F6" stroke-width="10" stroke-linejoin="round"/>
-    <rect x="112" y="326" width="96" height="12" rx="6" fill="#C6D2E4"/>
-    <rect x="112" y="350" width="68" height="12" rx="6" fill="#D6DFEC"/>
+        <!-- 左面板 -->
+        <rect x="30" y="42" width="214" height="428" rx="26" fill="url(#panel)"/>
+        <path d="M56 42 H218 A26 26 0 0 1 244 68 V90 H30 V68 A26 26 0 0 1 56 42 Z" fill="#D8E3F5"/>
+        <rect x="30" y="88" width="214" height="6" fill="#3B82F6"/>
+        <!-- 左面板文件夹轮廓 -->
+        <path d="M87 168 H127 L145 188 H187 A12 12 0 0 1 199 200 V250 A12 12 0 0 1 187 262 H87 A12 12 0 0 1 75 250 V180 A12 12 0 0 1 87 168 Z"
+              fill="none" stroke="#3B82F6" stroke-width="12" stroke-linejoin="round"/>
+        <rect x="75" y="298" width="142" height="14" rx="7" fill="#C6D2E4"/>
+        <rect x="75" y="332" width="98" height="14" rx="7" fill="#D6DFEC"/>
+        <rect x="75" y="366" width="124" height="14" rx="7" fill="#D6DFEC"/>
+        <rect x="75" y="400" width="86" height="14" rx="7" fill="#DDE4ED"/>
 
-    <!-- 右面板 -->
-    <rect x="268" y="118" width="168" height="276" rx="22" fill="url(#panel)"/>
-    <path d="M290 118 H414 A22 22 0 0 1 436 140 V170 H268 V140 A22 22 0 0 1 290 118 Z" fill="#DDE4EE"/>
-    <rect x="268" y="164" width="168" height="5" fill="#7C8FA6"/>
-    <!-- 右面板文件夹轮廓 -->
-    <path d="M306 236 H334 L346 250 H388 A10 10 0 0 1 398 260 V298 A10 10 0 0 1 388 308 H306 A10 10 0 0 1 296 298 V246 A10 10 0 0 1 306 236 Z"
-          fill="none" stroke="#6B7F96" stroke-width="10" stroke-linejoin="round"/>
-    <rect x="304" y="326" width="96" height="12" rx="6" fill="#CFD8E5"/>
-    <rect x="304" y="350" width="68" height="12" rx="6" fill="#DDE4ED"/>
+        <!-- 右面板 -->
+        <rect x="268" y="42" width="214" height="428" rx="26" fill="url(#panel)"/>
+        <path d="M294 42 H456 A26 26 0 0 1 482 68 V90 H268 V68 A26 26 0 0 1 294 42 Z" fill="#DDE4EE"/>
+        <rect x="268" y="88" width="214" height="6" fill="#7C8FA6"/>
+        <!-- 右面板文件夹轮廓 -->
+        <path d="M325 168 H365 L383 188 H425 A12 12 0 0 1 437 200 V250 A12 12 0 0 1 425 262 H325 A12 12 0 0 1 313 250 V180 A12 12 0 0 1 325 168 Z"
+              fill="none" stroke="#6B7F96" stroke-width="12" stroke-linejoin="round"/>
+        <rect x="313" y="298" width="142" height="14" rx="7" fill="#CFD8E5"/>
+        <rect x="313" y="332" width="98" height="14" rx="7" fill="#DDE4ED"/>
+        <rect x="313" y="366" width="124" height="14" rx="7" fill="#DDE4ED"/>
+        <rect x="313" y="400" width="86" height="14" rx="7" fill="#E4EAF2"/>
+    </g>
+    </g>
 </svg>
