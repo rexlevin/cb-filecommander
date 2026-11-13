@@ -6,6 +6,34 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.5] - 2026-11-13
+
+### feat | 新功能 / Features
+
+同一 tab 内复制粘贴时直接生成 copy1_原文件名、copy2_原文件名 副本，不再弹出信息拥挤的冲突选择框
+
+Copy-paste within the same tab now creates copy1_name, copy2_name copies directly instead of showing a crowded conflict dialog
+
+返回上一级后自动将刚离开的目录设为选中状态，Delete、F5、F6、Alt+Enter、Ctrl+C 等操作可直接生效
+
+The directory you just left is now actually selected after going up, so Delete, F5, F6, Alt+Enter and Ctrl+C work immediately
+
+### fix | 问题修复 / Bug Fixes
+
+修复 .asar 文件被当作目录展开、复制和移动异常的问题，文件操作改用 original-fs
+
+Fix .asar archives being treated as directories and failing on copy/move by using original-fs for file operations
+
+修复同一目录内移动会先删除源文件、存在丢失风险的问题，现在直接跳过
+
+Fix in-directory move deleting the source file first and risking data loss; it is now a no-op
+
+### style | 样式 / Styling
+
+重做 logo 为接近满版的构图，四周仅保留约 2.3% 边距，参考 Double Commander 的图标风格
+
+Rework the logo into a nearly full-bleed composition with only ~2.3% margin, following Double Commander's icon style
+
 ## [0.1.4] - 2026-11-11
 
 ### fix | 问题修复 / Bug Fixes
