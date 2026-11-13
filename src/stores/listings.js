@@ -197,6 +197,8 @@ export const useListingsStore = defineStore('listings', () => {
             if (focusOnEntry) {
                 const exists = state.entries.some((entry) => entry.path === focusOnEntry);
                 if (exists) {
+                    // 同时写入选中集合，保证 Delete / F5 / F6 等依赖 selected 的操作可直接生效
+                    state.selected = new Set([focusOnEntry]);
                     state.focusedPath = focusOnEntry;
                     state.anchorPath = focusOnEntry;
                 }
