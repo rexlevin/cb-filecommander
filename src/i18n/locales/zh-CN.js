@@ -172,6 +172,7 @@ export default {
         totalSize: '总大小',
         commonParent: '所在位置',
         dirSize: '—',
+        calculating: '正在计算…',
         bytes: '字节'
     },
     settings: {

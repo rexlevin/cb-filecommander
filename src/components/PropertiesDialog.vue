@@ -42,7 +42,7 @@
                 </div>
                 <div class="prop-row">
                     <span class="prop-label">{{ t('props.totalSize') }}</span>
-                    <span class="prop-value">{{ formatSize(totalSize) }}</span>
+                    <span class="prop-value">{{ totalSizeText }}</span>
                 </div>
                 <div class="prop-row">
                     <span class="prop-label">{{ t('props.commonParent') }}</span>
@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppModal from './AppModal.vue';
 import { useUiStore } from '@/stores/ui';
@@ -70,15 +70,70 @@ const ui = useUiStore();
 const loading = ref(true);
 const errorCode = ref(null);
 const items = ref([]);
-const totalSize = ref(0);
+const baseTotal = ref(0);
 const commonParent = ref('');
+// 目录大小异步统计：path -> { size, done }
+const dirStats = reactive({});
+const computing = computed(() => Object.values(dirStats).some((stats) => !stats.done));
+const displayTotal = computed(() => {
+    let total = baseTotal.value;
+    for (const stats of Object.values(dirStats)) total += stats.size || 0;
+    return total;
+});
+const totalSizeText = computed(() => {
+    if (!computing.value) return `${formatSize(displayTotal.value)} (${displayTotal.value} ${t('props.bytes')})`;
+    return `${t('props.calculating')} ${formatSize(displayTotal.value)}`;
+});
 let loadSeq = 0;
+let jobSeq = 0;
+let jobId = '';
+let unsubscribe = null;
 
 const paths = computed(() => (ui.properties && ui.properties.paths) || []);
 
 function sizeText(item) {
-    if (item.kind === 'dir') return t('props.dirSize');
-    return `${formatSize(item.size)} (${item.size} ${t('props.bytes')})`;
+    if (typeof item.size === 'number') return `${formatSize(item.size)} (${item.size} ${t('props.bytes')})`;
+    const stats = dirStats[item.path];
+    if (stats) return `${t('props.calculating')} ${formatSize(stats.size)}`;
+    return t('props.dirSize');
+}
+
+function stopSize() {
+    if (jobId) {
+        api.propsSizeCancel({ jobId });
+        jobId = '';
+    }
+    for (const key of Object.keys(dirStats)) delete dirStats[key];
+}
+
+function onPropsSize(payload) {
+    if (!payload || payload.jobId !== jobId || !payload.path) return;
+    if (payload.cancelled) {
+        delete dirStats[payload.path];
+        return;
+    }
+    const size = typeof payload.size === 'number' ? payload.size : 0;
+    dirStats[payload.path] = { size, done: !!payload.done };
+    if (payload.done) {
+        const item = items.value.find((entry) => entry.path === payload.path);
+        if (item) item.size = size;
+    }
+}
+
+async function requestDirSizes() {
+    const dirPaths = items.value
+        .filter((entry) => entry.kind === 'dir')
+        .map((entry) => entry.path);
+    if (!dirPaths.length) return;
+    jobSeq += 1;
+    const id = `props-${Date.now().toString(36)}-${jobSeq}`;
+    jobId = id;
+    try {
+        const res = await api.propsSizeStart({ paths: dirPaths, jobId: id });
+        if (!res || !res.ok) jobId = '';
+    } catch (error) {
+        jobId = '';
+    }
 }
 
 function close() {
@@ -87,9 +142,15 @@ function close() {
 
 async function load() {
     const seq = ++loadSeq;
+    stopSize();
     loading.value = true;
     errorCode.value = null;
-    const res = await api.properties({ paths: Array.from(paths.value || []).map(String) });
+    let res = null;
+    try {
+        res = await api.properties({ paths: Array.from(paths.value || []).map(String) });
+    } catch (error) {
+        res = { ok: false, error: 'UNKNOWN' };
+    }
     if (seq !== loadSeq) return;
     loading.value = false;
     if (!res || !res.ok) {
@@ -97,11 +158,17 @@ async function load() {
         return;
     }
     items.value = res.items || [];
-    totalSize.value = res.totalSize || 0;
+    baseTotal.value = res.totalSize || 0;
     commonParent.value = res.commonParent || '';
+    requestDirSizes();
 }
 
+unsubscribe = api.onPropsSize(onPropsSize);
 watch(paths, load, { immediate: true });
+onBeforeUnmount(() => {
+    if (unsubscribe) unsubscribe();
+    stopSize();
+});
 </script>
 
 <style scoped>

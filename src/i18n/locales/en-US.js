@@ -172,6 +172,7 @@ export default {
         totalSize: 'Total Size',
         commonParent: 'Location',
         dirSize: '—',
+        calculating: 'Calculating…',
         bytes: 'bytes'
     },
     settings: {

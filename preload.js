@@ -57,6 +57,8 @@ contextBridge.exposeInMainWorld('filecommander', {
     createFile: (payload) => ipcRenderer.invoke('filecommander.createFile', payload),
     rename: (payload) => ipcRenderer.invoke('filecommander.rename', payload),
     properties: (payload) => ipcRenderer.invoke('filecommander.fs.properties', payload),
+    propsSizeStart: (payload) => ipcRenderer.invoke('filecommander.fs.sizeStart', payload),
+    propsSizeCancel: (payload) => ipcRenderer.invoke('filecommander.fs.sizeCancel', payload),
 
     transferStart: (payload) => ipcRenderer.invoke('filecommander.transfer.start', payload),
     transferRespond: (payload) => ipcRenderer.invoke('filecommander.transfer.respond', payload),
@@ -75,6 +77,7 @@ contextBridge.exposeInMainWorld('filecommander', {
     onThemeApplied: (cb) => subscribe('filecommander.themeApplied', cb),
     onMenuAction: (cb) => subscribe('filecommander.menuAction', cb),
     onDirStats: (cb) => subscribe('filecommander.dirStats', cb),
+    onPropsSize: (cb) => subscribe('filecommander.propsSize', cb),
     onDirChanged: (cb) => subscribe('filecommander.dirChanged', cb),
     onTransferProgress: (cb) => subscribe('filecommander.transfer.progress', cb),
     onTransferConflict: (cb) => subscribe('filecommander.transfer.conflict', cb),
