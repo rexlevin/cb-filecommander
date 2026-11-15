@@ -19,6 +19,9 @@ export const ICONS = {
     'file-pdf': '<path d="M3.6 1.9h5.1l3.7 3.7v8.5H3.6V1.9Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8.7 1.9v3.7h3.7" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 12.6c1.2-.3 1.9-1.2 1.9-2.2 0-.7-.4-1.2-1-1.2-.7 0-1 .6-.8 1.4.3 1.1 1.3 2.1 2.7 2.3" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>',
     'file-exe': '<path d="M3.6 1.9h5.1l3.7 3.7v8.5H3.6V1.9Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8.7 1.9v3.7h3.7" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="m5.5 8.4 1.4 1.4-1.4 1.4M8.4 11.4h2.2" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>',
     symlink: '<path d="M3.2 2.6h5.6l3.2 3.2v8H3.2v-11Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8.8 2.6v3.2h3.2" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="m6.2 10.7 3-3M7.2 7.6h2.2v2.2" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>',
+    // 指向目录的链接/联接（Windows 兼容性联接如 Application Data、Cookies）
+    // 与资源管理器一致：文件夹外形 + 快捷方式箭头，避免被误认为普通文件
+    'folder-link': '<path d="M1.5 4.2c0-.7.5-1.2 1.2-1.2h3.1l1.4 1.6h6.1c.7 0 1.2.5 1.2 1.2v6.4c0 .7-.5 1.2-1.2 1.2H2.7c-.7 0-1.2-.5-1.2-1.2V4.2Z" fill="currentColor" opacity=".5"/><path d="M6.1 10.9 9.3 7.7M7 7.7h2.3v2.3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>',
     drive: '<rect x="1.7" y="4.4" width="12.6" height="7.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M1.7 8.9h12.6" stroke="currentColor" stroke-width="1.2"/><circle cx="4" cy="10.8" r=".7" fill="currentColor"/>',
     home: '<path d="M2.4 7.4 8 2.4l5.6 5v6.2H2.4V7.4Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.2 13.6V9.8h3.6v3.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>',
     desktop: '<rect x="1.8" y="3" width="12.4" height="8" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 11v2.4M5.4 13.4h5.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>',
@@ -43,7 +46,7 @@ const EXEC_EXTENSIONS = new Set(['exe', 'msi', 'appimage', 'deb', 'rpm', 'bat', 
 export function fileIcon(entry) {
     if (!entry) return 'file';
     if (entry.kind === 'dir') return 'folder';
-    if (entry.kind === 'link') return 'symlink';
+    if (entry.kind === 'link') return entry.linkTarget === 'dir' ? 'folder-link' : 'symlink';
     if (entry.kind === 'other') return 'file';
 
     const ext = extensionOf(entry.name);
