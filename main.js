@@ -429,7 +429,7 @@ function createWindow() {
         title: pkg.displayName,
         icon: windowIcon(),
         backgroundColor: nativeTheme.shouldUseDarkColors ? '#17181c' : '#f5f6f8',
-        show: true,
+        show: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -440,6 +440,11 @@ function createWindow() {
 
     if (saved && saved.isMaximized) mainWindow.maximize();
     else if (saved && saved.isFullScreen) mainWindow.setFullScreen(true);
+
+    // 首帧渲染完成后再显示窗口，避免窗口已出现但内容区白屏
+    mainWindow.once('ready-to-show', () => {
+        if (mainWindow) mainWindow.show();
+    });
 
     const isDev = process.env.NODE_ENV === 'development';
     if (isDev) {
