@@ -164,6 +164,14 @@ export const useListingsStore = defineStore('listings', () => {
             return;
         }
 
+        // Windows 兼容性联接（Application Data / Cookies 等）会被主进程解析到真实目录，
+        // 这里同步标签路径，避免继续用无法列目录的联接路径。
+        if (res.dir && res.dir !== dir) {
+            dir = res.dir;
+            state.dir = dir;
+            usePanesStore().setTabDir(pane, tabId, dir);
+        }
+
         state.token = res.token;
         state.entries = res.entries || [];
         const index = new Map();
