@@ -17,6 +17,7 @@
         "build": "vite build",
         "preview": "vite preview",
         "dist": "electron-builder --linux dir",
+        "dist:win": "electron-builder --win dir",
         "start": "cross-env NODE_ENV=development electron -r ../canbox-core/injection.js . --app-id=cb-filecommander --no-sandbox"
     },
     "devDependencies": {
@@ -39,10 +40,12 @@
             "main.js",
             "preload.js",
             "lib/**/*",
+            "icons/**/*",
             "build/**/*",
             "public/**/*",
             "package.json"
         ],
-        "linux": { "target": ["dir"] }
+        "linux": { "target": ["dir"] },
+        "win": { "target": ["dir"] }
     }
 }

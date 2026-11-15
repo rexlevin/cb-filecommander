@@ -15,6 +15,10 @@ const { getStore } = require('./lib/settings');
 const { buildMenu } = require('./lib/menu');
 const { registerIpc } = require('./lib/ipc');
 const transfer = require('./lib/transfer');
+const taskbar = require('./lib/taskbar');
+
+// 在窗口创建前设置 AppUserModelID，保证任务栏分组与固定项能关联到本 APP
+app.setAppUserModelId(taskbar.appUserModelId());
 
 const DEFAULT_FONTS = {
     file: { family: '', size: 13 },     // 文件面板
@@ -483,6 +487,8 @@ app.whenReady().then(() => {
     registerIpc({ send: sendToMain });
     rebuildMenu();
     createWindow();
+    // 确保任务栏固定项与进程 AppUserModelID 关联（Windows）
+    taskbar.ensure();
 });
 
 app.on('window-all-closed', () => {
