@@ -450,6 +450,12 @@ function createWindow() {
         if (mainWindow) mainWindow.show();
     });
 
+    // 兜底：页面加载失败（开发服务器未启动/构建产物缺失）时 ready-to-show 可能不触发，
+    // 也要把窗口显示出来，避免应用看起来没有启动
+    mainWindow.webContents.on('did-fail-load', (_event, _code, _desc, _url, isMainFrame) => {
+        if (isMainFrame && mainWindow) mainWindow.show();
+    });
+
     const isDev = process.env.NODE_ENV === 'development';
     if (isDev) {
         mainWindow.loadURL('http://localhost:5182');
