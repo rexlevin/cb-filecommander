@@ -6,6 +6,46 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.6] - 2026-11-15
+
+### feat | 新功能 / Features
+
+新增 Windows 任务栏快捷方式集成功能，修复固定图标异常问题
+新增 folder-link 图标及链接类型文件的图标判断逻辑
+针对 Windows 平台优化链接图标显示及相关兼容逻辑
+新增删除后焦点处理逻辑，支持刷新时指定焦点路径
+
+Add Windows taskbar shortcut integration and fix pinned icon issues
+Add a folder-link icon and icon detection for link-type files
+Improve link icon rendering and related compatibility logic on Windows
+Add post-delete focus handling and support specifying the focus path on refresh
+
+### fix | 问题修复 / Bug Fixes
+
+修复目录图标在 Windows 下显示错误的问题，并添加页面加载失败时的兜底显示逻辑
+修复 Windows 任务栏快捷方式启动错位问题
+修复窗口启动时白屏问题，改为首帧渲染完成后再显示窗口
+修复 Windows 兼容性联接无法列目录的问题
+修复文件夹 Alt+Enter 不显示大小的问题
+
+Fix incorrect directory icons on Windows and add a fallback view for page load failures
+Fix misaligned launches from Windows taskbar shortcuts
+Fix the white screen at startup by showing the window after the first frame renders
+Fix Windows junction links failing to list directory contents
+Fix Alt+Enter not showing folder size
+
+### refactor | 重构 / Refactoring
+
+移除 PowerShell 脚本，改用 Electron 原生 API 处理任务栏快捷方式
+
+Remove the PowerShell script and handle taskbar shortcuts with native Electron APIs
+
+### build | 构建 / Build
+
+版本号更新至 0.1.6
+
+Bump version to 0.1.6
+
 ## [0.1.5] - 2026-11-13
 
 ### feat | 新功能 / Features
