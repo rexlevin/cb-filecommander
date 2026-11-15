@@ -42,11 +42,12 @@ const GROUP_ICONS = {
 
 const EXEC_EXTENSIONS = new Set(['exe', 'msi', 'appimage', 'deb', 'rpm', 'bat', 'cmd', 'com', 'run', 'bin']);
 
-/** 目录项 → 图标名 */
-export function fileIcon(entry) {
+/** 目录项 → 图标名（platform 传入 settings.platform） */
+export function fileIcon(entry, platform) {
     if (!entry) return 'file';
     if (entry.kind === 'dir') return 'folder';
-    if (entry.kind === 'link') return entry.linkTarget === 'dir' ? 'folder-link' : 'symlink';
+    // 仅 Windows 用“文件夹+箭头”表达指向目录的链接/联接；其它平台保持符号链接图标
+    if (entry.kind === 'link') return entry.linkTarget === 'dir' && platform === 'win32' ? 'folder-link' : 'symlink';
     if (entry.kind === 'other') return 'file';
 
     const ext = extensionOf(entry.name);

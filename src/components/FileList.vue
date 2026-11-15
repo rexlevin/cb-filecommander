@@ -78,7 +78,7 @@
                             v-if="settings.showIcons"
                             class="icon"
                             :class="iconClass(entry)"
-                            :name="fileIcon(entry)"
+                            :name="fileIcon(entry, settings.platform)"
                             :size="iconSize"
                             :dataUrl="entry.icon || null"
                         />

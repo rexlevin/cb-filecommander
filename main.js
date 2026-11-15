@@ -17,8 +17,12 @@ const { registerIpc } = require('./lib/ipc');
 const transfer = require('./lib/transfer');
 const taskbar = require('./lib/taskbar');
 
-// 在窗口创建前设置 AppUserModelID，保证任务栏分组与固定项能关联到本 APP
-app.setAppUserModelId(taskbar.appUserModelId());
+// 在窗口创建前设置 AppUserModelID，保证任务栏分组与固定项能关联到本 APP。
+// 该 API 仅 Windows 有效（canbox-core/env.js 已按 appId 设置过，这里用于不经 injection 直接启动的场景），
+// 非 Windows 平台显式跳过，避免依赖“其它平台为 no-op”这一实现细节。
+if (process.platform === 'win32') {
+    app.setAppUserModelId(taskbar.appUserModelId());
+}
 
 const DEFAULT_FONTS = {
     file: { family: '', size: 13 },     // 文件面板
