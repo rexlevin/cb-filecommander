@@ -16,8 +16,7 @@
         "dev": "vite --port 5182",
         "build": "vite build",
         "preview": "vite preview",
-        "dist": "electron-builder --linux dir",
-        "dist:win": "electron-builder --win dir",
+        "dist": "electron-builder --dir",
         "start": "cross-env NODE_ENV=development electron -r ../canbox-core/injection.js . --app-id=cb-filecommander --no-sandbox"
     },
     "devDependencies": {

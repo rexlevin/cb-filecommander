@@ -1,7 +1,6 @@
 ﻿param(
     [Parameter(Mandatory = $true)][string]$Lnk,
     [Parameter(Mandatory = $true)][string]$Aumid,
-    [string]$AppsDir = '',
     [string]$Target = '',
     [string]$Arguments = '',
     [string]$WorkingDirectory = '',
@@ -190,27 +189,25 @@ try {
 
         if ($existing.aumid -eq $Aumid) {
             if ($AllowCreate -eq '1' -and $Target) {
-                Write-Shortcut -TargetPath $Target -StartArgs $Arguments -WorkDir $WorkingDirectory -IconLocation ($(if ($Icon) { "$Icon,0" } else { $existing.icon }))
-                $result.action = 'refreshed'
+                $desiredIcon = if ($Icon) { "$Icon,0" } else { $existing.icon }
+                # 启动参数已经一致时不做任何写入，避免每次启动都重写快捷方式
+                $same = ($existing.target -eq $Target) -and
+                        ($existing.arguments -eq $Arguments) -and
+                        ($existing.workingDirectory -eq $WorkingDirectory) -and
+                        ($existing.icon -eq $desiredIcon)
+                if ($same) {
+                    $result.action = 'unchanged'
+                } else {
+                    Write-Shortcut -TargetPath $Target -StartArgs $Arguments -WorkDir $WorkingDirectory -IconLocation $desiredIcon
+                    $result.action = 'refreshed'
+                }
             } else {
                 $result.action = 'unchanged'
             }
-        } elseif ($existing.target -match 'canbox\.exe$' -and $existing.arguments -match '(?:^|\s)app\s+(\S+)') {
-            # manager 生成的快捷方式：只有目标 APP 确实已安装时才保留其启动方式，仅补 AUMID
-            $installedId = $Matches[1]
-            $installed = $false
-            if ($AppsDir) { $installed = Test-Path -LiteralPath (Join-Path $AppsDir $installedId) }
-
-            if ($installed) {
-                Write-Shortcut -TargetPath $existing.target -StartArgs $existing.arguments -WorkDir $existing.workingDirectory -IconLocation $existing.icon
-                $result.action = 'aumid-added'
-            } elseif ($AllowCreate -eq '1' -and $Target) {
-                Write-Shortcut -TargetPath $Target -StartArgs $Arguments -WorkDir $WorkingDirectory -IconLocation ($(if ($Icon) { "$Icon,0" } else { '' }))
-                $result.action = 'replaced'
-            } else {
-                $result.action = 'skipped'
-            }
         } elseif ($AllowCreate -eq '1' -and $Target) {
+            # 源码运行：以当前进程的启动参数为准。
+            # manager 生成的旧快捷方式（canbox.exe app <id>）可能指向已失效的应用，
+            # 固定到任务栏后会打开 Electron 默认窗口，因此这里直接替换而不是保留。
             Write-Shortcut -TargetPath $Target -StartArgs $Arguments -WorkDir $WorkingDirectory -IconLocation ($(if ($Icon) { "$Icon,0" } else { '' }))
             $result.action = 'replaced'
         } else {
