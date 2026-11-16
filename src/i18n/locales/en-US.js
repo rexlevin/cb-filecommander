@@ -128,6 +128,7 @@ export default {
         skip: 'Skip',
         rename: 'Rename',
         cancel: 'Cancel',
+        keyHint: ' ({key})',
         existAs: 'A {kind} with the same name already exists',
         kindDir: 'folder',
         kindFile: 'file'

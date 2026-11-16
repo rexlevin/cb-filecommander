@@ -128,6 +128,7 @@ export default {
         skip: '跳过',
         rename: '重命名',
         cancel: '取消',
+        keyHint: '（{key}）',
         existAs: '目标位置已存在同名{kind}',
         kindDir: '文件夹',
         kindFile: '文件'
