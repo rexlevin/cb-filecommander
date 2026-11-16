@@ -6,6 +6,7 @@
     <PropertiesDialog v-if="ui.properties" />
     <ConflictDialog v-if="transfers.conflict" />
     <ConfirmDialog v-if="ui.confirm" />
+    <WhatsNewDialog v-if="ui.whatsNew" />
     <TransferBar />
     <ContextMenu />
     <transition name="app-toast">
@@ -25,6 +26,7 @@ import NameDialog from '@/components/NameDialog.vue';
 import PropertiesDialog from '@/components/PropertiesDialog.vue';
 import ConflictDialog from '@/components/ConflictDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import WhatsNewDialog from '@/components/WhatsNewDialog.vue';
 import TransferBar from '@/components/TransferBar.vue';
 import ContextMenu from '@/components/ContextMenu.vue';
 import { usePanesStore } from '@/stores/panes';
@@ -365,7 +367,20 @@ async function pasteSelection() {
 
 function modalOpen() {
     return !!(ui.settingsOpen || ui.helpOpen || ui.namePrompt || ui.properties
-        || ui.confirm || transfers.conflict);
+        || ui.confirm || ui.whatsNew || transfers.conflict);
+}
+
+/** 升级后首次启动展示“更新内容”；canbox-core 未注入或失败时静默跳过 */
+async function checkWhatsNew() {
+    if (!api.whatsNew) return;
+    try {
+        const result = await api.whatsNew.check();
+        if (!result || !result.success || !result.show) return;
+        if (!Array.isArray(result.sections) || !result.sections.length) return;
+        ui.openWhatsNew({ currentVersion: result.currentVersion, sections: result.sections });
+    } catch (error) {
+        // 更新说明属于增强信息，失败时不打扰用户
+    }
 }
 
 /** 统计选中条目：分目录/文件/符号链接/其他，并抽出前几个名字 */
@@ -760,6 +775,7 @@ onMounted(() => {
     window.addEventListener('keydown', onKeydown);
     // Ctrl+滚轮缩放：passive 必须 false 才能 preventDefault，用 capture 优先于其它 wheel 监听
     window.addEventListener('wheel', onWheelZoom, { capture: true, passive: false });
+    checkWhatsNew();
 });
 
 onBeforeUnmount(() => {

@@ -574,7 +574,7 @@ function onKeydown(event) {
         }
     }
 
-    if (ui.settingsOpen || ui.helpOpen || ui.namePrompt || ui.properties) return;
+    if (ui.settingsOpen || ui.helpOpen || ui.namePrompt || ui.properties || ui.whatsNew) return;
     if (props.pane !== panes.activePane) return;
     if (event.defaultPrevented || event.isComposing || isEditable(event.target)) return;
 

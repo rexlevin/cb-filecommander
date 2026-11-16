@@ -220,6 +220,11 @@ export default {
         externalTerminal: 'External Terminal',
         externalTerminalHint: 'Path to executable or command (supports PATH entries like gnome-terminal, konsole, cmd.exe). Leave empty to auto-detect the system terminal.'
     },
+    whatsNew: {
+        title: "What's New",
+        subtitle: 'Upgraded to v{version}. Here is what changed:',
+        dismiss: 'Got it'
+    },
     help: {
         title: 'Keyboard Shortcuts',
         close: 'Close',

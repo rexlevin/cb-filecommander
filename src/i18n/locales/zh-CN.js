@@ -220,6 +220,11 @@ export default {
         externalTerminal: '外部终端',
         externalTerminalHint: '可执行文件路径或命令（支持 PATH 中的命令，如 gnome-terminal、konsole、cmd.exe）。留空时 F9 自动检测系统终端。'
     },
+    whatsNew: {
+        title: '更新内容',
+        subtitle: '已升级到 v{version}，本次更新内容如下',
+        dismiss: '知道了'
+    },
     help: {
         title: '快捷键帮助',
         close: '关闭',

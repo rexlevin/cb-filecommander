@@ -13,6 +13,7 @@
  *   - onSettingApplied(cb) / onThemeApplied(cb) / onMenuAction(cb)
  *   - onDirStats(cb) / onDirChanged(cb)
  *   - onTransferProgress(cb) / onTransferConflict(cb) / onTransferDone(cb)
+ *   - whatsNew.check(options) / whatsNew.ack(version) — 更新内容（canbox-core 提供）
  */
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 const path = require('path');
@@ -66,6 +67,11 @@ contextBridge.exposeInMainWorld('filecommander', {
     transferList: () => ipcRenderer.invoke('filecommander.transfer.list'),
 
     getFileIcons: (paths) => ipcRenderer.invoke('filecommander.getFileIcons', paths),
+
+    whatsNew: {
+        check: (options) => ipcRenderer.invoke('canbox.whatsNew.check', options),
+        ack: (version) => ipcRenderer.invoke('canbox.whatsNew.ack', version)
+    },
 
     clipboardWriteText: (text) => ipcRenderer.invoke('filecommander.clipboard.writeText', { text }),
     clipboardReadText: () => ipcRenderer.invoke('filecommander.clipboard.readText'),

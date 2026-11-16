@@ -42,6 +42,7 @@
             "icons/**/*",
             "build/**/*",
             "public/**/*",
+            "CHANGELOG.md",
             "package.json"
         ],
         "linux": { "target": ["dir"] },

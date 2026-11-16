@@ -6,6 +6,34 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.7] - 2026-11-16
+
+### feat | 新功能 / Features
+
+新增“更新内容”弹窗，APP 升级后首次启动展示自上个版本以来的变更
+Linux 下文件与文件夹图标优先使用系统原生图标，修复大写扩展名与无扩展名文件（如 .AppImage、可执行符号链接）图标错误
+新建标签页（Ctrl+T 或菜单）插入到当前标签页之后
+复制/移动冲突弹窗支持 R/S/O/C 快捷键与左右键切换，默认选中“覆盖”
+冲突选择“重命名”改为与同目录复制一致的 copy1_原文件名 命名
+
+Add a "What's New" dialog shown on the first launch after an APP upgrade
+Use native system icons for files and folders on Linux, fixing icons for uppercase extensions and extensionless files (.AppImage, executable symlinks)
+Insert new tabs (Ctrl+T or menu) right after the current tab
+Support R/S/O/C shortcuts and left/right navigation in the copy/move conflict dialog, with "Overwrite" selected by default
+Name conflicts resolved by "Rename" now use copy1_name, matching same-directory copy
+
+### fix | 问题修复 / Bug Fixes
+
+修复冲突弹窗中单字符快捷键被文件列表快速搜索拦截的问题
+
+Fix single-letter shortcuts in the conflict dialog being swallowed by file list quick search
+
+### build | 构建 / Build
+
+打包产物包含 CHANGELOG.md，.canbox-app 声明 requires.whatsNew 能力与最低 canbox-core 版本
+
+Include CHANGELOG.md in the package and declare the whatsNew requirement in .canbox-app
+
 ## [0.1.6] - 2026-11-15
 
 ### feat | 新功能 / Features
