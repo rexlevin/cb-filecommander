@@ -22,12 +22,6 @@ Insert new tabs (Ctrl+T or menu) right after the current tab
 Support R/S/O/C shortcuts and left/right navigation in the copy/move conflict dialog, with "Overwrite" selected by default
 Name conflicts resolved by "Rename" now use copy1_name, matching same-directory copy
 
-### fix | 问题修复 / Bug Fixes
-
-修复冲突弹窗中单字符快捷键被文件列表快速搜索拦截的问题
-
-Fix single-letter shortcuts in the conflict dialog being swallowed by file list quick search
-
 ### build | 构建 / Build
 
 打包产物包含 CHANGELOG.md，.canbox-app 声明 requires.whatsNew 能力与最低 canbox-core 版本
