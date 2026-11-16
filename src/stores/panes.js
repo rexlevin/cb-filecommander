@@ -70,7 +70,10 @@ export const usePanesStore = defineStore('panes', () => {
         if (tabs.length >= MAX_TABS) return null;
         const dir = activeTab(pane) ? activeTab(pane).dir : useSettingsStore().home;
         const tab = { id: newTabId(), dir };
-        tabs.push(tab);
+        // 新标签插入到当前标签之后，而不是追加到末尾
+        const index = tabs.findIndex(item => item.id === state[pane].activeTabId);
+        if (index === -1) tabs.push(tab);
+        else tabs.splice(index + 1, 0, tab);
         state[pane].activeTabId = tab.id;
         return tab;
     }
