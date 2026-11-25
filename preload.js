@@ -7,7 +7,7 @@
  *   - sessionGet() / sessionSet(session)
  *   - themeSet(theme) / localeSet(locale)
  *   - listDir() / listCancel() / pathExpand() / placesList()
- *   - freeSpace() / openPath() / watchSet() / openExternal()
+ *   - freeSpace() / openPath() / openWith() / openWithApp() / chooseProgram() / listApps() / watchSet() / openExternal()
  *   - validateName() / mkdir() / createFile() / rename() / properties()
  *   - transferStart() / transferRespond() / transferCancel() / transferList()
  *   - onSettingApplied(cb) / onThemeApplied(cb) / onMenuAction(cb)
@@ -48,6 +48,9 @@ contextBridge.exposeInMainWorld('filecommander', {
     freeSpace: (dir) => ipcRenderer.invoke('filecommander.fs.freeSpace', { path: dir }),
     openPath: (dir) => ipcRenderer.invoke('filecommander.openPath', { path: dir }),
     openWith: (payload) => ipcRenderer.invoke('filecommander.openWith', payload),
+    openWithApp: (payload) => ipcRenderer.invoke('filecommander.openWithApp', payload),
+    chooseProgram: (payload) => ipcRenderer.invoke('filecommander.chooseProgram', payload),
+    listApps: () => ipcRenderer.invoke('filecommander.apps.list'),
     openTerminal: (payload) => ipcRenderer.invoke('filecommander.openTerminal', payload),
     showInFolder: (dir) => ipcRenderer.invoke('filecommander.showInFolder', { path: dir }),
     watchSet: (dirs) => ipcRenderer.invoke('filecommander.watch.set', { dirs }),

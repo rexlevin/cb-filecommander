@@ -45,12 +45,16 @@ const DEFAULT_SETTINGS = {
     zoom: 1,
     columns: { size: 96, mtime: 150, type: 100 },
     externalEditor: '',          // 外部编辑器路径
-    externalTerminal: ''         // 外部终端路径，留空自动检测系统终端
+    externalTerminal: '',        // 外部终端路径，留空自动检测系统终端
+    openWithRecent: [],          // 「打开方式」最近使用的程序（绝对路径，最新在前）
+    openWithByExt: {}            // 「打开方式」按扩展名记住的程序：{ html: '/usr/bin/gedit' }
 };
 
 const THEMES = ['system', 'light', 'dark'];
 const LOCALES = ['system', 'zh-CN', 'en-US'];
 const MAX_TABS = 7;
+const MAX_OPEN_WITH_RECENT = 8;
+const MAX_OPEN_WITH_EXT = 50;
 
 let mainWindow = null;
 let winStateTimer = null;
@@ -59,6 +63,35 @@ let tabSeq = 0;
 // ---------------------------------------------------------------------------
 // 设置
 // ---------------------------------------------------------------------------
+/** 程序路径列表去重并截断，最多保留 MAX_OPEN_WITH_RECENT 项 */
+function sanitizeProgramList(value) {
+    if (!Array.isArray(value)) return [];
+    const seen = new Set();
+    const list = [];
+    for (const item of value) {
+        if (typeof item !== 'string' || !item || item.length > 500 || seen.has(item)) continue;
+        seen.add(item);
+        list.push(item);
+        if (list.length >= MAX_OPEN_WITH_RECENT) break;
+    }
+    return list;
+}
+
+/** 扩展名 → 程序映射，键为小写扩展名（不含点） */
+function sanitizeProgramMap(value) {
+    const next = {};
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return next;
+    let count = 0;
+    for (const [ext, program] of Object.entries(value)) {
+        if (count >= MAX_OPEN_WITH_EXT) break;
+        if (!/^[a-z0-9+_-]{1,20}$/.test(ext)) continue;
+        if (typeof program !== 'string' || !program || program.length > 500) continue;
+        next[ext] = program;
+        count += 1;
+    }
+    return next;
+}
+
 function readSettings() {
     let raw = {};
     try {
@@ -72,6 +105,8 @@ function readSettings() {
     if (!LOCALES.includes(settings.locale)) settings.locale = DEFAULT_SETTINGS.locale;
     settings.columns = { ...DEFAULT_SETTINGS.columns, ...(raw.columns || {}) };
     settings.fonts = sanitizeFonts(raw.fonts, DEFAULT_FONTS);
+    settings.openWithRecent = sanitizeProgramList(raw.openWithRecent);
+    settings.openWithByExt = sanitizeProgramMap(raw.openWithByExt);
     return settings;
 }
 
@@ -106,6 +141,14 @@ function validateSetting(key, value) {
             return typeof value === 'string' && value.length <= 500;
         case 'externalTerminal':
             return typeof value === 'string' && value.length <= 500;
+        case 'openWithRecent':
+            return Array.isArray(value) && value.length <= MAX_OPEN_WITH_RECENT
+                && value.every((item) => typeof item === 'string' && item.length > 0 && item.length <= 500);
+        case 'openWithByExt':
+            return value !== null && typeof value === 'object' && !Array.isArray(value)
+                && Object.keys(value).length <= MAX_OPEN_WITH_EXT
+                && Object.entries(value).every(([ext, program]) => /^[a-z0-9+_-]{1,20}$/.test(ext)
+                    && typeof program === 'string' && program.length > 0 && program.length <= 500);
         case 'rowHeightAuto':
             return typeof value === 'boolean';
         case 'showHidden':
@@ -175,6 +218,8 @@ function applySetting(key, value) {
     const settings = readSettings();
     if (key === 'columns') settings.columns = sanitizeColumns(value);
     else if (key === 'fonts') settings.fonts = sanitizeFonts(value);
+    else if (key === 'openWithRecent') settings.openWithRecent = sanitizeProgramList(value);
+    else if (key === 'openWithByExt') settings.openWithByExt = sanitizeProgramMap(value);
     else settings[key] = value;
     writeSettings(settings);
 
@@ -499,7 +544,7 @@ nativeTheme.on('updated', () => {
 });
 
 app.whenReady().then(() => {
-    registerIpc({ send: sendToMain });
+    registerIpc({ send: sendToMain, getWindow: () => mainWindow });
     rebuildMenu();
     createWindow();
     // 确保任务栏固定项与进程 AppUserModelID 关联（Windows）

@@ -6,6 +6,7 @@
     <PropertiesDialog v-if="ui.properties" />
     <ConflictDialog v-if="transfers.conflict" />
     <ConfirmDialog v-if="ui.confirm" />
+    <OpenWithDialog v-if="ui.openWithPrompt" />
     <WhatsNewDialog v-if="ui.whatsNew" />
     <TransferBar />
     <ContextMenu />
@@ -26,6 +27,7 @@ import NameDialog from '@/components/NameDialog.vue';
 import PropertiesDialog from '@/components/PropertiesDialog.vue';
 import ConflictDialog from '@/components/ConflictDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import OpenWithDialog from '@/components/OpenWithDialog.vue';
 import WhatsNewDialog from '@/components/WhatsNewDialog.vue';
 import TransferBar from '@/components/TransferBar.vue';
 import ContextMenu from '@/components/ContextMenu.vue';
@@ -37,7 +39,8 @@ import { useTransfersStore } from '@/stores/transfers';
 import { useClipboardStore } from '@/stores/clipboard';
 import { useUiStore } from '@/stores/ui';
 import { sortEntries } from '@/utils/sort';
-import { errorText } from '@/utils/format';
+import { errorText, extensionOf } from '@/utils/format';
+import { openFileWith } from '@/utils/openwith';
 
 const api = window.filecommander;
 const { t, te } = useI18n();
@@ -263,8 +266,11 @@ async function openFocusedWithEditor() {
         ui.showToast(t('open.editorNotDir'), 'warning');
         return;
     }
-    const program = settings.externalEditor;
-    const res = await api.openWith({ path, program });
+    // F4 直接打开：优先按扩展名记住的程序（'system' 表示显式使用系统默认），
+    // 其次设置中的外部编辑器，都为空时交给系统默认
+    const saved = settings.programForExt(extensionOf(entry.name));
+    const spec = saved === 'system' ? '' : (saved || settings.externalEditor);
+    const res = await openFileWith(api, path, spec);
     if (!res || !res.ok) {
         ui.showToast(errorText(res && res.error, t, te), 'danger');
     }
@@ -367,7 +373,7 @@ async function pasteSelection() {
 
 function modalOpen() {
     return !!(ui.settingsOpen || ui.helpOpen || ui.namePrompt || ui.properties
-        || ui.confirm || ui.whatsNew || transfers.conflict);
+        || ui.confirm || ui.whatsNew || ui.openWithPrompt || transfers.conflict);
 }
 
 /** 升级后首次启动展示“更新内容”；canbox-core 未注入或失败时静默跳过 */

@@ -18,6 +18,8 @@ export const useUiStore = defineStore('ui', () => {
     const confirm = ref(null);
     // 更新内容（升级后首次启动展示）：{ currentVersion, sections: [{ version, date, body }] }
     const whatsNew = ref(null);
+    // 「打开方式」选择框：{ path, name }
+    const openWithPrompt = ref(null);
     // 全局提示：{ id, message, tone }
     const toast = ref(null);
     // 右键菜单：{ x, y, pane, tabId, entry: Entry|null, paths: string[] }
@@ -85,6 +87,14 @@ export const useUiStore = defineStore('ui', () => {
         whatsNew.value = null;
     }
 
+    function openOpenWith(payload) {
+        openWithPrompt.value = payload || null;
+    }
+
+    function closeOpenWith() {
+        openWithPrompt.value = null;
+    }
+
     function closeToast() {
         if (toastTimer) {
             clearTimeout(toastTimer);
@@ -129,13 +139,14 @@ export const useUiStore = defineStore('ui', () => {
 
     return {
         settingsOpen, settingsSection, helpOpen,
-        namePrompt, properties, renaming, confirm, toast, contextMenu, whatsNew,
+        namePrompt, properties, renaming, confirm, toast, contextMenu, whatsNew, openWithPrompt,
         openSettings, closeSettings, openHelp, closeHelp,
         openNamePrompt, closeNamePrompt, openProperties, closeProperties,
         startRename, cancelRename,
         openConfirm, closeConfirm,
         openContextMenu, closeContextMenu,
         openWhatsNew, closeWhatsNew,
+        openOpenWith, closeOpenWith,
         showToast, closeToast
     };
 });

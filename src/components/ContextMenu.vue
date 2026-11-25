@@ -82,14 +82,21 @@ const items = computed(() => {
             shortcut: 'Enter',
             disabled: ctx.value.paths.length > 1
         });
-        // 用外部编辑器打开（仅单选文件；目录或多选禁用）
-        const canUseEditor = isSingle.value && singleEntry.value && singleEntry.value.kind === 'file' && hasEditor;
+        // 打开方式（仅单选文件）
         list.push({
-            action: 'openWithEditor',
-            label: t('ctx.openWithEditor'),
-            shortcut: 'F4',
-            disabled: !canUseEditor
+            action: 'openWith',
+            label: t('ctx.openWith'),
+            disabled: !isSingle.value || !singleEntry.value || singleEntry.value.kind !== 'file'
         });
+        // 用外部编辑器打开（仅配置了编辑器且单选文件时显示）
+        const canUseEditor = isSingle.value && singleEntry.value && singleEntry.value.kind === 'file' && hasEditor;
+        if (canUseEditor) {
+            list.push({
+                action: 'openWithEditor',
+                label: t('ctx.openWithEditor'),
+                shortcut: 'F4'
+            });
+        }
         // 在新标签打开（仅单选目录）
         if (singleIsDir.value) {
             list.push({ action: 'openInNewTab', label: t('ctx.openInNewTab') });
@@ -168,6 +175,10 @@ async function onItemClick(action) {
             if (c.entry) {
                 await listings.open(c.pane, c.tabId, c.entry);
             }
+            break;
+        }
+        case 'openWith': {
+            if (c.entry) ui.openOpenWith({ path: c.entry.path, name: c.entry.name });
             break;
         }
         case 'openWithEditor': {
@@ -289,7 +300,15 @@ function onKeydown(event) {
     if (event.key === 'Escape') {
         event.preventDefault();
         ui.closeContextMenu();
+        return;
     }
+    // W：直接触发「打开方式」（仅单选文件时可用）
+    if (event.ctrlKey || event.altKey || event.metaKey) return;
+    if (event.key.toLowerCase() !== 'w') return;
+    const item = items.value.find((entry) => entry.action === 'openWith');
+    if (!item || item.disabled) return;
+    event.preventDefault();
+    onItemClick('openWith');
 }
 
 onMounted(() => {

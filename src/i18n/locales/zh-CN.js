@@ -78,6 +78,7 @@ export default {
     },
     ctx: {
         open: '打开',
+        openWith: '打开方式（W）',
         openWithEditor: '用外部编辑器打开',
         openInNewTab: '在新标签打开',
         copy: '复制',
@@ -106,6 +107,21 @@ export default {
         execMessage: '确定要运行「{name}」吗？',
         execConfirm: '运行',
         editorNotDir: '外部编辑器只能打开文件'
+    },
+    openWith: {
+        title: '打开方式',
+        system: '系统默认打开方式',
+        browse: '浏览其他程序…',
+        chooseTitle: '选择程序',
+        installed: '已安装的应用程序',
+        searchPlaceholder: '搜索应用程序',
+        loadingApps: '正在读取应用程序…',
+        noMatch: '没有匹配的应用程序',
+        defaultForExt: '默认',
+        browsed: '本次选择',
+        editor: '设置中的编辑器',
+        remember: '总是用于 .{ext} 文件（仅影响 F4 打开，不影响 Enter）',
+        open: '打开'
     },
     confirm: {
         copyTitle: '复制到另一栏',
@@ -216,7 +232,7 @@ export default {
         restoreWindow: '启动时恢复窗口位置',
         shortcutsNote: '快捷键为只读列表，与 F1 帮助内容一致。',
         externalEditor: '外部编辑器',
-        externalEditorHint: '可执行文件路径或命令（支持 PATH 中的命令，如 code、vim、gedit）。留空时 F4 回退到系统默认打开方式。',
+        externalEditorHint: '可执行文件路径或命令（支持 PATH 中的命令，如 code、vim、gedit）。留空时 F4 使用系统默认打开方式。',
         externalTerminal: '外部终端',
         externalTerminalHint: '可执行文件路径或命令（支持 PATH 中的命令，如 gnome-terminal、konsole、cmd.exe）。留空时 F9 自动检测系统终端。'
     },
@@ -314,6 +330,9 @@ export default {
         UNSUPPORTED: '不支持的文件类型，已跳过',
         UNKNOWN: '未知错误',
         OPEN_FAILED: '无法打开此项',
+        DIALOG_FAILED: '无法打开程序选择对话框',
+        APP_NOT_FOUND: '未找到该应用程序',
+        APP_LAUNCH_FAILED: '无法启动该应用程序',
         NO_TERMINAL: '未检测到可用的终端程序，请在设置中指定',
         MULTI_SELECTED: '多选时不能打开'
     }

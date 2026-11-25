@@ -55,6 +55,8 @@ export const useSettingsStore = defineStore('settings', () => {
     const columns = ref({ size: 96, mtime: 150, type: 100 });
     const externalEditor = ref('');
     const externalTerminal = ref('');
+    const openWithRecent = ref([]);
+    const openWithByExt = ref({});
 
     const platform = ref('linux');
     const home = ref('/');
@@ -111,6 +113,12 @@ export const useSettingsStore = defineStore('settings', () => {
         columns.value = { size: 96, mtime: 150, type: 100, ...(s.columns || {}) };
         externalEditor.value = typeof s.externalEditor === 'string' ? s.externalEditor : '';
         externalTerminal.value = typeof s.externalTerminal === 'string' ? s.externalTerminal : '';
+        openWithRecent.value = Array.isArray(s.openWithRecent)
+            ? s.openWithRecent.filter((item) => typeof item === 'string')
+            : [];
+        openWithByExt.value = s.openWithByExt && typeof s.openWithByExt === 'object' && !Array.isArray(s.openWithByExt)
+            ? { ...s.openWithByExt }
+            : {};
 
         platform.value = boot.platform || 'linux';
         home.value = boot.home || '/';
@@ -144,6 +152,12 @@ export const useSettingsStore = defineStore('settings', () => {
             case 'columns': columns.value = { ...columns.value, ...(value || {}) }; break;
             case 'externalEditor': externalEditor.value = typeof value === 'string' ? value : ''; break;
             case 'externalTerminal': externalTerminal.value = typeof value === 'string' ? value : ''; break;
+            case 'openWithRecent':
+                openWithRecent.value = Array.isArray(value) ? value.filter((item) => typeof item === 'string') : [];
+                break;
+            case 'openWithByExt':
+                openWithByExt.value = value && typeof value === 'object' && !Array.isArray(value) ? { ...value } : {};
+                break;
             default: return;
         }
         if (key === 'fonts' || key === 'rowHeight' || key === 'rowHeightAuto') applyTypography();
@@ -158,6 +172,25 @@ export const useSettingsStore = defineStore('settings', () => {
         const plain = toPlain(value);
         applyRemote(key, plain);
         api.settingsSet(key, plain);
+    }
+
+    /** 指定扩展名（不含点）记住的打开方式，未记住返回空串；'system' 表示显式使用系统默认 */
+    function programForExt(ext) {
+        return (ext && openWithByExt.value[ext]) || '';
+    }
+
+    /** 记录最近使用的程序；ext 非空时同时记住该扩展名的默认程序 */
+    function rememberProgram(program, ext = '') {
+        if (!program || program === 'system') return;
+        const recent = [program, ...openWithRecent.value.filter((item) => item !== program)].slice(0, 8);
+        set('openWithRecent', recent);
+        if (ext) set('openWithByExt', { ...openWithByExt.value, [ext]: program });
+    }
+
+    /** 将该扩展名显式设为系统默认（F4 也不再使用全局外部编辑器） */
+    function useSystemForExt(ext) {
+        if (!ext) return;
+        set('openWithByExt', { ...openWithByExt.value, [ext]: 'system' });
     }
 
     function bindEvents() {
@@ -183,7 +216,8 @@ export const useSettingsStore = defineStore('settings', () => {
     return {
         theme, locale, fonts, rowHeight, rowHeightAuto, recommendedRowHeight, showHidden, dirsFirst, showIcons,
         confirmOverwrite, restoreSession, restoreWindow, zoom, columns, externalEditor, externalTerminal,
+        openWithRecent, openWithByExt,
         platform, home, version, electron, arch, homepage, appName, isDark,
-        hydrate, set, bindEvents
+        hydrate, set, programForExt, rememberProgram, useSystemForExt, bindEvents
     };
 });
