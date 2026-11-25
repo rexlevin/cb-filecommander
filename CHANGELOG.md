@@ -6,6 +6,20 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.8] - 2026-11-25
+
+### feat | 新功能 / Features
+
+右键菜单新增“打开方式（W）”，可从系统已安装应用中选择，也可通过文件选择框指定任意程序
+应用程序列表支持模糊搜索，搜索结果默认选中第一项，回车即可直接打开
+支持按文件扩展名记住打开方式，勾选“总是用于该文件类型”后仅影响 F4 打开，不影响 Enter
+支持恢复某类文件的系统默认打开方式，且不会被全局外部编辑器设置覆盖
+
+Add "Open With (W)" to the context menu, choosing from installed applications or browsing for any program
+Support fuzzy search in the application list, with the first result selected by default and Enter to open
+Remember the opening method per file extension; "Always use for .ext" affects F4 only, not Enter
+Allow restoring the system default for a file type, overriding the global external editor setting
+
 ## [0.1.7] - 2026-11-16
 
 ### feat | 新功能 / Features
