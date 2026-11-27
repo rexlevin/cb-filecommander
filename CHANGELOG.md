@@ -6,6 +6,20 @@
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.1.9] - 2026-11-27
+
+### fix | 问题修复 / Bug Fixes
+
+修复 Linux 下 AppImage 按 Enter/F4 无反应：带执行位的 ELF 二进制改为直接启动，不再交给 xdg-open（application/vnd.appimage 被关联到 gnome-disk-image-mounter，只会挂载镜像）
+修复指向 AppImage 的无扩展名符号链接按 Enter/F4 无反应：跟随链接识别 ELF 后直接运行
+移除可执行文件打开前的“确定要执行吗”确认框，与系统文件管理器/Double Commander 的直接运行行为保持一致
+bash 脚本等文本可执行文件仍按系统关联打开（本机为 vim 编辑器），不会被静默放到后台执行
+
+Fix AppImage doing nothing on Enter/F4 on Linux: ELF binaries with the executable bit are now launched directly instead of going through xdg-open (application/vnd.appimage is associated with gnome-disk-image-mounter, which only mounts the image)
+Fix extensionless symlinks to an AppImage doing nothing on Enter/F4 by following the link and detecting ELF before launching
+Remove the "Are you sure you want to run?" confirmation for executables, matching the direct-run behavior of system file managers and Double Commander
+Text executables such as bash scripts still open through the system association (vim on this machine) instead of being silently executed in the background
+
 ## [0.1.8] - 2026-11-25
 
 ### feat | 新功能 / Features
