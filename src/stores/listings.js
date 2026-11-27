@@ -9,16 +9,6 @@ import i18n from '@/i18n';
 
 const api = window.filecommander;
 
-const EXECUTABLE_EXTS = new Set([
-    '.exe', '.bat', '.cmd', '.com', '.msi', '.sh', '.appimage'
-]);
-
-function isExecutable(entry) {
-    if (!entry || entry.kind !== 'file') return false;
-    const ext = entry.name.slice(entry.name.lastIndexOf('.')).toLowerCase();
-    return EXECUTABLE_EXTS.has(ext);
-}
-
 /** 渲染层图标缓存：path → dataUrl，跨标签页/会话共享 */
 const ICON_DATAURL_CACHE = new Map();
 
@@ -334,18 +324,7 @@ export const useListingsStore = defineStore('listings', () => {
             await openDir(pane, tabId, entry.path, { mode: 'push' });
             return { ok: true };
         }
-        // 可执行文件打开前二次确认
-        if (isExecutable(entry)) {
-            const ui = useUiStore();
-            const t = i18n.global.t;
-            const confirmed = await ui.openConfirm({
-                title: t('open.execTitle'),
-                message: t('open.execMessage', { name: entry.name }),
-                confirmLabel: t('open.execConfirm'),
-                cancelLabel: t('common.cancel')
-            });
-            if (!confirmed) return { ok: false, error: 'CANCELLED' };
-        }
+        // ELF 二进制直接运行，其余交给系统关联；两者都不再二次确认
         const res = await api.openPath(entry.path);
         if (!res || !res.ok) {
             const ui = useUiStore();

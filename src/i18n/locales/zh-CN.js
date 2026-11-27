@@ -103,9 +103,6 @@ export default {
         label: '搜索：'
     },
     open: {
-        execTitle: '打开可执行文件',
-        execMessage: '确定要运行「{name}」吗？',
-        execConfirm: '运行',
         editorNotDir: '外部编辑器只能打开文件'
     },
     openWith: {

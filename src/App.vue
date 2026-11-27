@@ -266,6 +266,15 @@ async function openFocusedWithEditor() {
         ui.showToast(t('open.editorNotDir'), 'warning');
         return;
     }
+    // ELF 二进制（AppImage、带执行位的可执行文件、指向它们的符号链接）没有可编辑内容，
+    // 与 Enter 一致直接运行，避免 F4 落到 xdg-open 上毫无反应；脚本仍走下面的编辑器/系统关联
+    if (entry.executable) {
+        const run = await api.openPath(path);
+        if (!run || !run.ok) {
+            ui.showToast(errorText(run && run.error, t, te), 'danger');
+        }
+        return;
+    }
     // F4 直接打开：优先按扩展名记住的程序（'system' 表示显式使用系统默认），
     // 其次设置中的外部编辑器，都为空时交给系统默认
     const saved = settings.programForExt(extensionOf(entry.name));

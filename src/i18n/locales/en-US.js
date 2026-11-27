@@ -103,9 +103,6 @@ export default {
         label: 'Search:'
     },
     open: {
-        execTitle: 'Open Executable File',
-        execMessage: 'Are you sure you want to run "{name}"?',
-        execConfirm: 'Run',
         editorNotDir: 'External editor can only open files'
     },
     openWith: {
